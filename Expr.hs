@@ -4,7 +4,7 @@
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
-{-# LANGUAGE PatternSynonyms #-}
+
 module Expr
   ( ExprF(..)
   , NumExpr
@@ -12,7 +12,6 @@ module Expr
   , FracExpr
   , FloatExpr
   , Func(..)
-  , reassoc
   ) where
 
 import           Control.Lens
@@ -478,16 +477,3 @@ instance Show a => Show (NumExpr   a) where showsPrec _ = zygo prec pprAlg
 instance Show a => Show (IntExpr   a) where showsPrec _ = zygo prec pprAlg
 instance Show a => Show (FracExpr  a) where showsPrec _ = zygo prec pprAlg
 instance Show a => Show (FloatExpr a) where showsPrec _ = zygo prec pprAlg
-
-pattern x :+ y = Fix (x :+: y)
-pattern x :* y = Fix (x :*: y)
-
-reassoc :: Ord a => (Plated (e a), Coercible (Expr a) (e a)) => e a -> e a
-reassoc = rewrite (crce reassoc') where
-  crce :: Coercible (Expr a) (e a) => (Expr a -> Maybe (Expr a)) -> e a -> Maybe (e a)
-  crce = coerce
-  reassoc' (a :+ b) | b < a = Just $ b :+ a
-  reassoc' (a :* b) | b < a = Just $ b :* a
-  reassoc' (a :+ (b :+ c)) = Just $ (a :+ b) :+ c
-  reassoc' (a :* (b :* c)) = Just $ (a :* b) :* c
-  reassoc' _ = Nothing

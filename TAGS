@@ -1,96 +1,93 @@
 
-./Expr.hs,2704
-data ExprF ExprF28,29
-  Lit Lit29,30
-  (:+:) )32,33
-  (:*:) )33,34
-  Abs Abs34,35
-  Sig Sig35,36
-  Neg Neg36,37
-  Qut Qut39,40
-  Rem Rem40,41
-  (:/:) )43,44
-  (:$:) )46,47
-type Expr Expr48,49
-type Expr a a48,49
-data Func Func50,51
-    Sin Sin51,52
-    Sin | Cos Cos51,52
-    Sin | Cos | Exp Exp51,52
-    Sin | Cos | Exp | Log Log51,52
-    Sin | Cos | Exp | Log | Tan Tan51,52
-    Sin | Cos | Exp | Log | Tan | Atn Atn51,52
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn51,52
-  | Acs Acs52,53
-  | Acs | Snh Snh52,53
-  | Acs | Snh | Csh Csh52,53
-  | Acs | Snh | Csh | Tnh Tnh52,53
-  | Acs | Snh | Csh | Tnh | Ach Ach52,53
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash52,53
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth52,53
-instance instance55,56
+./Expr.hs,2629
+data ExprF ExprF27,28
+  Lit Lit28,29
+  (:+:) )31,32
+  (:*:) )32,33
+  Abs Abs33,34
+  Sig Sig34,35
+  Neg Neg35,36
+  Qut Qut38,39
+  Rem Rem39,40
+  (:/:) )42,43
+  (:$:) )45,46
+type Expr Expr47,48
+type Expr a a47,48
+data Func Func49,50
+    Sin Sin50,51
+    Sin | Cos Cos50,51
+    Sin | Cos | Exp Exp50,51
+    Sin | Cos | Exp | Log Log50,51
+    Sin | Cos | Exp | Log | Tan Tan50,51
+    Sin | Cos | Exp | Log | Tan | Atn Atn50,51
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn50,51
+  | Acs Acs51,52
+  | Acs | Snh Snh51,52
+  | Acs | Snh | Csh Csh51,52
+  | Acs | Snh | Csh | Tnh Tnh51,52
+  | Acs | Snh | Csh | Tnh | Ach Ach51,52
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash51,52
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth51,52
+instance instance54,55
+prec prec130,131
 prec prec131,132
-prec prec132,133
-zipExpr zipExpr144,145
-zipExpr zipExpr152,153
+zipExpr zipExpr143,144
+zipExpr zipExpr151,152
+evalAlg evalAlg164,165
 evalAlg evalAlg165,166
-evalAlg evalAlg166,167
+appF appF177,178
 appF appF178,179
-appF appF179,180
-newtype NumExpr NumExpr195,196
-  NumExpr NumExpr196,197
-  NumExpr { _getNumExpr _getNumExpr196,197
-coerceNumBi coerceNumBi199,200
-coerceNumBi coerceNumBi201,202
+newtype NumExpr NumExpr194,195
+  NumExpr NumExpr195,196
+  NumExpr { _getNumExpr _getNumExpr195,196
+coerceNumBi coerceNumBi198,199
+coerceNumBi coerceNumBi200,201
+coerceNumUn coerceNumUn202,203
 coerceNumUn coerceNumUn203,204
-coerceNumUn coerceNumUn204,205
-newtype IntExpr IntExpr214,215
-  IntExpr IntExpr215,216
-  IntExpr { _getIntExpr _getIntExpr215,216
-coerceIntBi coerceIntBi218,219
-coerceIntBi coerceIntBi220,221
+newtype IntExpr IntExpr213,214
+  IntExpr IntExpr214,215
+  IntExpr { _getIntExpr _getIntExpr214,215
+coerceIntBi coerceIntBi217,218
+coerceIntBi coerceIntBi219,220
+coerceIntUn coerceIntUn221,222
 coerceIntUn coerceIntUn222,223
-coerceIntUn coerceIntUn223,224
-newtype FracExpr FracExpr246,247
-  FracExpr FracExpr247,248
-  FracExpr { _getFracExpr _getFracExpr247,248
-coerceFracBi coerceFracBi250,251
-coerceFracBi coerceFracBi252,253
+newtype FracExpr FracExpr245,246
+  FracExpr FracExpr246,247
+  FracExpr { _getFracExpr _getFracExpr246,247
+coerceFracBi coerceFracBi249,250
+coerceFracBi coerceFracBi251,252
+coerceFracUn coerceFracUn253,254
 coerceFracUn coerceFracUn254,255
-coerceFracUn coerceFracUn255,256
-newtype FloatExpr FloatExpr269,270
-  FloatExpr FloatExpr270,271
-  FloatExpr { _getFloatExpr _getFloatExpr270,271
-coerceFloatBi coerceFloatBi273,274
-coerceFloatBi coerceFloatBi275,276
+newtype FloatExpr FloatExpr268,269
+  FloatExpr FloatExpr269,270
+  FloatExpr { _getFloatExpr _getFloatExpr269,270
+coerceFloatBi coerceFloatBi272,273
+coerceFloatBi coerceFloatBi274,275
+coerceFloatUn coerceFloatUn276,277
 coerceFloatUn coerceFloatUn277,278
-coerceFloatUn coerceFloatUn278,279
+type instance instance306,307
+type instance Base Base306,307
 type instance instance307,308
-type instance Base Base307,308
 type instance instance308,309
 type instance instance309,310
-type instance instance310,311
+cproject cproject311,312
 cproject cproject312,313
-cproject cproject313,314
+cembed cembed321,322
 cembed cembed322,323
-cembed cembed323,324
+platef platef331,332
 platef platef332,333
-platef platef333,334
-anaM anaM346,347
+anaM anaM345,346
+litArb litArb347,348
 litArb litArb348,349
-litArb litArb349,350
+numArb numArb350,351
 numArb numArb351,352
-numArb numArb352,353
+intArb intArb358,359
 intArb intArb359,360
-intArb intArb360,361
+fracArb fracArb363,364
 fracArb fracArb364,365
-fracArb fracArb365,366
+floatArb floatArb366,367
 floatArb floatArb367,368
-floatArb floatArb368,369
+putAlg putAlg393,394
 putAlg putAlg394,395
-putAlg putAlg395,396
+pprAlg pprAlg459,460
 pprAlg pprAlg460,461
-pprAlg pprAlg461,462
-pattern pattern481,482
-reassoc reassoc484,485
-reassoc reassoc485,486
