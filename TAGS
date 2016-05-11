@@ -1,55 +1,89 @@
 
-./Expr.hs,1553
-module Expr Expr5,6
-data ExprF ExprF16,17
-  Lit Lit17,18
-  (:+:) )20,21
-  (:*:) )21,22
-  Abs Abs22,23
-  Sig Sig23,24
-  Neg Neg24,25
-  Qut Qut27,28
-  Rem Rem28,29
-  (:/:) )31,32
-  (:$:) )34,35
-data Func Func36,37
-    Sin Sin37,38
-    Sin | Cos Cos37,38
-    Sin | Cos | Exp Exp37,38
-    Sin | Cos | Exp | Log Log37,38
-    Sin | Cos | Exp | Log | Tan Tan37,38
-    Sin | Cos | Exp | Log | Tan | Atn Atn37,38
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn37,38
-  | Acs Acs38,39
-  | Acs | Snh Snh38,39
-  | Acs | Snh | Csh Csh38,39
-  | Acs | Snh | Csh | Tnh Tnh38,39
-  | Acs | Snh | Csh | Tnh | Ach Ach38,39
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash38,39
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth38,39
-instance instance41,42
-prec prec97,98
-prec prec98,99
-zipExpr zipExpr110,111
-zipExpr zipExpr118,119
-evalAlg evalAlg131,132
-evalAlg evalAlg132,133
-appF appF144,145
-appF appF145,146
-newtype NumExpr NumExpr161,162
-  NumExpr NumExpr162,163
-  NumExpr { getNumExpr getNumExpr162,163
-coerceNumBi coerceNumBi165,166
-coerceNumBi coerceNumBi166,167
-coerceNumUn coerceNumUn168,169
-coerceNumUn coerceNumUn169,170
-newtype FracExpr FracExpr179,180
-  FracExpr FracExpr180,181
-  FracExpr { getFracExpr getFracExpr180,181
-coerceFracBi coerceFracBi183,184
-coerceFracBi coerceFracBi184,185
-coerceFracUn coerceFracUn186,187
-coerceFracUn coerceFracUn187,188
-newtype FloatExpr FloatExpr201,202
-  FloatExpr FloatExpr202,203
-  FloatExpr { getFloatExpr getFloatExpr202,203
+./Expr.hs,2513
+module Expr Expr7,8
+data ExprF ExprF20,21
+  Lit Lit21,22
+  (:+:) )24,25
+  (:*:) )25,26
+  Abs Abs26,27
+  Sig Sig27,28
+  Neg Neg28,29
+  Qut Qut31,32
+  Rem Rem32,33
+  (:/:) )35,36
+  (:$:) )38,39
+data Func Func40,41
+    Sin Sin41,42
+    Sin | Cos Cos41,42
+    Sin | Cos | Exp Exp41,42
+    Sin | Cos | Exp | Log Log41,42
+    Sin | Cos | Exp | Log | Tan Tan41,42
+    Sin | Cos | Exp | Log | Tan | Atn Atn41,42
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn41,42
+  | Acs Acs42,43
+  | Acs | Snh Snh42,43
+  | Acs | Snh | Csh Csh42,43
+  | Acs | Snh | Csh | Tnh Tnh42,43
+  | Acs | Snh | Csh | Tnh | Ach Ach42,43
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash42,43
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth42,43
+instance instance45,46
+prec prec104,105
+prec prec105,106
+zipExpr zipExpr117,118
+zipExpr zipExpr125,126
+evalAlg evalAlg138,139
+evalAlg evalAlg139,140
+appF appF151,152
+appF appF152,153
+newtype NumExpr NumExpr168,169
+  NumExpr NumExpr169,170
+  NumExpr { getNumExpr getNumExpr169,170
+coerceNumBi coerceNumBi172,173
+coerceNumBi coerceNumBi173,174
+coerceNumUn coerceNumUn175,176
+coerceNumUn coerceNumUn176,177
+newtype IntExpr IntExpr186,187
+  IntExpr IntExpr187,188
+  IntExpr { getIntExpr getIntExpr187,188
+coerceIntBi coerceIntBi190,191
+coerceIntBi coerceIntBi191,192
+coerceIntUn coerceIntUn193,194
+coerceIntUn coerceIntUn194,195
+newtype FracExpr FracExpr217,218
+  FracExpr FracExpr218,219
+  FracExpr { getFracExpr getFracExpr218,219
+coerceFracBi coerceFracBi221,222
+coerceFracBi coerceFracBi222,223
+coerceFracUn coerceFracUn224,225
+coerceFracUn coerceFracUn225,226
+newtype FloatExpr FloatExpr239,240
+  FloatExpr FloatExpr240,241
+  FloatExpr { getFloatExpr getFloatExpr240,241
+coerceFloatBi coerceFloatBi243,244
+coerceFloatBi coerceFloatBi244,245
+coerceFloatUn coerceFloatUn246,247
+coerceFloatUn coerceFloatUn247,248
+type instance instance276,277
+type instance Base Base276,277
+type instance instance277,278
+type instance instance278,279
+type instance instance279,280
+cataM cataM339,340
+anaM anaM347,348
+zipo zipo349,350
+zipo zipo354,355
+litArb litArb356,357
+litArb litArb357,358
+numArb numArb359,360
+numArb numArb360,361
+intArb intArb367,368
+intArb intArb368,369
+fracArb fracArb372,373
+fracArb fracArb373,374
+floatArb floatArb375,376
+floatArb floatArb376,377
+putAlg putAlg402,403
+putAlg putAlg403,404
+pprAlg pprAlg468,469
+pprAlg pprAlg469,470
