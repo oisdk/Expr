@@ -4,8 +4,16 @@
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
-
-module Expr where
+{-# LANGUAGE PatternSynonyms #-}
+module Expr
+  ( ExprF(..)
+  , NumExpr
+  , IntExpr
+  , FracExpr
+  , FloatExpr
+  , Func(..)
+  , reassoc
+  ) where
 
 import           Control.Lens
 import           Control.Monad
@@ -14,9 +22,9 @@ import           Data.Functor.Foldable hiding (Foldable)
 import qualified Data.Functor.Foldable as Functor
 import           Data.Monoid
 import           Data.Ord
+import           Data.Serialize
 import           GHC.Generics          (Generic)
-import Test.QuickCheck
-import Data.Serialize
+import           Test.QuickCheck
 
 data ExprF a r where
   Lit :: a -> ExprF a r
@@ -29,8 +37,8 @@ data ExprF a r where
   Neg   :: Num a => r -> ExprF a r
 
   -- Integral:
-  Qut   :: Integral a => r -> r -> ExprF a r
-  Rem   :: Integral a => r -> r -> ExprF a r
+  Qut :: Integral a => r -> r -> ExprF a r
+  Rem :: Integral a => r -> r -> ExprF a r
 
   -- Fractional:
   (:/:) :: Fractional a => r -> r -> ExprF a r
@@ -38,10 +46,29 @@ data ExprF a r where
   -- Floating:
   (:$:) :: Floating a => Func -> r -> ExprF a r
 
+type Expr a = Fix (ExprF a)
+
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
   | Acs | Snh | Csh | Tnh | Ach | Ash | Ath
-          deriving (Eq, Ord, Enum, Bounded, Generic, Show)
+          deriving (Eq, Ord, Enum, Bounded, Generic)
+
+instance Show Func where
+  show = \case
+    Exp -> "exp"
+    Sin -> "sin"
+    Cos -> "cos"
+    Tan -> "tan"
+    Log -> "log"
+    Atn -> "atan"
+    Snh -> "sinh"
+    Csh -> "cosh"
+    Tnh -> "tanh"
+    Asn -> "asin"
+    Acs -> "acos"
+    Ach -> "acosh"
+    Ash -> "asinh"
+    Ath -> "atanh"
 
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
 instance Serialize Func
@@ -107,10 +134,10 @@ prec = \case
     Lit _   -> 9
     Abs _   -> 8
     Sig _   -> 7
-    Qut _ _ -> 6
-    Rem _ _ -> 5
-    _ :$: _ -> 4
-    Neg _   -> 3
+    _ :$: _ -> 6
+    Neg _   -> 5
+    Qut _ _ -> 4
+    Rem _ _ -> 3
     _ :/: _ -> 2
     _ :*: _ -> 1
     _ :+: _ -> 0
@@ -167,13 +194,14 @@ appF = \case
   Ath -> atanh
 
 newtype NumExpr a =
-  NumExpr { getNumExpr :: Fix (ExprF a)
+  NumExpr { _getNumExpr :: Expr a
           } deriving (Eq, Ord)
 
-coerceNumBi :: (Fix (ExprF a) -> Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> NumExpr a -> NumExpr a -> NumExpr a
+coerceNumBi :: (Expr a -> Expr a -> ExprF a (Expr a))
+            -> NumExpr a -> NumExpr a -> NumExpr a
 coerceNumBi = coerce
 
-coerceNumUn :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> NumExpr a -> NumExpr a
+coerceNumUn :: (Expr a -> ExprF a (Expr a)) -> NumExpr a -> NumExpr a
 coerceNumUn = coerce
 
 instance Num a => Num (NumExpr a) where
@@ -185,13 +213,14 @@ instance Num a => Num (NumExpr a) where
   fromInteger = NumExpr . Fix . Lit . fromInteger
 
 newtype IntExpr a =
-  IntExpr { getIntExpr :: Fix (ExprF a)
+  IntExpr { _getIntExpr :: Expr a
           } deriving (Eq, Ord)
 
-coerceIntBi :: (Fix (ExprF a) -> Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> IntExpr a -> IntExpr a -> IntExpr a
+coerceIntBi :: (Expr a -> Expr a -> ExprF a (Expr a))
+            -> IntExpr a -> IntExpr a -> IntExpr a
 coerceIntBi = coerce
 
-coerceIntUn :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> IntExpr a -> IntExpr a
+coerceIntUn :: (Expr a -> ExprF a (Expr a)) -> IntExpr a -> IntExpr a
 coerceIntUn = coerce
 
 instance Num a => Num (IntExpr a) where
@@ -216,13 +245,14 @@ instance Integral a => Integral (IntExpr a) where
   rem  = coerceIntBi Rem
 
 newtype FracExpr a =
-  FracExpr { getFracExpr :: Fix (ExprF a)
+  FracExpr { _getFracExpr :: Expr a
            } deriving (Eq, Ord)
 
-coerceFracBi :: (Fix (ExprF a) -> Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FracExpr a -> FracExpr a -> FracExpr a
+coerceFracBi :: (Expr a -> Expr a -> ExprF a (Expr a))
+             -> FracExpr a -> FracExpr a -> FracExpr a
 coerceFracBi = coerce
 
-coerceFracUn :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FracExpr a -> FracExpr a
+coerceFracUn :: (Expr a -> ExprF a (Expr a)) -> FracExpr a -> FracExpr a
 coerceFracUn = coerce
 
 instance Num a => Num (FracExpr a) where
@@ -238,13 +268,14 @@ instance Fractional a => Fractional (FracExpr a) where
   (/) = coerceFracBi (:/:)
 
 newtype FloatExpr a =
-  FloatExpr { getFloatExpr :: Fix (ExprF a)
+  FloatExpr { _getFloatExpr :: Expr a
             } deriving (Eq, Ord)
 
-coerceFloatBi :: (Fix (ExprF a) -> Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FloatExpr a -> FloatExpr a -> FloatExpr a
+coerceFloatBi :: (Expr a -> Expr a -> ExprF a (Expr a))
+              -> FloatExpr a -> FloatExpr a -> FloatExpr a
 coerceFloatBi = coerce
 
-coerceFloatUn :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FloatExpr a -> FloatExpr a
+coerceFloatUn :: (Expr a -> ExprF a (Expr a)) -> FloatExpr a -> FloatExpr a
 coerceFloatUn = coerce
 
 instance Num a => Num (FloatExpr a) where
@@ -279,65 +310,33 @@ type instance Base (IntExpr   a) = ExprF a
 type instance Base (FracExpr  a) = ExprF a
 type instance Base (FloatExpr a) = ExprF a
 
-instance Functor.Foldable (NumExpr a) where
-  project = crce project where
-    crce :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> NumExpr a -> ExprF a (NumExpr a)
-    crce = coerce
+cproject :: Coercible (Expr a) (e a) => e a -> ExprF a (e a)
+cproject = crce project where
+  crce :: Coercible (Expr a) (e a) => (Expr a -> ExprF a (Expr a)) -> e a -> ExprF a (e a)
+  crce = coerce
 
-instance Functor.Foldable (IntExpr a) where
-  project = crce project where
-    crce :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> IntExpr a -> ExprF a (IntExpr a)
-    crce = coerce
+instance Functor.Foldable (NumExpr   a) where project = cproject
+instance Functor.Foldable (IntExpr   a) where project = cproject
+instance Functor.Foldable (FracExpr  a) where project = cproject
+instance Functor.Foldable (FloatExpr a) where project = cproject
 
-instance Functor.Foldable (FracExpr a) where
-  project = crce project where
-    crce :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FracExpr a -> ExprF a (FracExpr a)
-    crce = coerce
+cembed :: Coercible (Expr a) (e a) => ExprF a (e a) -> e a
+cembed = crce embed where
+  crce :: Coercible (Expr a) (e a) => (ExprF a (Expr a) -> Expr a) -> ExprF a (e a) -> e a
+  crce = coerce
 
-instance Functor.Foldable (FloatExpr a) where
-  project = crce project where
-    crce :: (Fix (ExprF a) -> ExprF a (Fix (ExprF a))) -> FloatExpr a -> ExprF a (FloatExpr a)
-    crce = coerce
+instance Unfoldable (NumExpr   a) where embed = cembed
+instance Unfoldable (IntExpr   a) where embed = cembed
+instance Unfoldable (FracExpr  a) where embed = cembed
+instance Unfoldable (FloatExpr a) where embed = cembed
 
-instance Unfoldable (NumExpr a) where
-  embed = crce embed where
-    crce :: (ExprF a (Fix (ExprF a)) -> Fix (ExprF a)) -> ExprF a (NumExpr a) -> NumExpr a
-    crce = coerce
+platef :: (Unfoldable f, Functor.Foldable f, Traversable (Base f), Applicative m) => (f -> m f) -> f -> m f
+platef f = fmap embed . traverse f . project
 
-instance Unfoldable (IntExpr a) where
-  embed = crce embed where
-    crce :: (ExprF a (Fix (ExprF a)) -> Fix (ExprF a)) -> ExprF a (IntExpr a) -> IntExpr a
-    crce = coerce
-
-instance Unfoldable (FracExpr a) where
-  embed = crce embed where
-    crce :: (ExprF a (Fix (ExprF a)) -> Fix (ExprF a)) -> ExprF a (FracExpr a) -> FracExpr a
-    crce = coerce
-
-instance Unfoldable (FloatExpr a) where
-  embed = crce embed where
-    crce :: (ExprF a (Fix (ExprF a)) -> Fix (ExprF a)) -> ExprF a (FloatExpr a) -> FloatExpr a
-    crce = coerce
-
-instance Plated (NumExpr   a) where
-  plate f = fmap embed . traverse f . project
-
-instance Plated (IntExpr   a) where
-  plate f = fmap embed . traverse f . project
-
-instance Plated (FracExpr  a) where
-  plate f = fmap embed . traverse f . project
-
-instance Plated (FloatExpr a) where
-  plate f = fmap embed . traverse f . project
-
--- | A monadic catamorphism.
-cataM
-  :: (Functor.Foldable t, Traversable (Base t), Monad m)
-  => (Base t a -> m a) -- ^ a monadic (Base t)-algebra
-  -> t                 -- ^ fixed point
-  -> m a               -- ^ result
-cataM f = c where c = f <=< (traverse c . project)
+instance Plated (NumExpr   a) where plate = platef
+instance Plated (IntExpr   a) where plate = platef
+instance Plated (FracExpr  a) where plate = platef
+instance Plated (FloatExpr a) where plate = platef
 
 -- | A monadic anamorphism
 anaM
@@ -347,15 +346,8 @@ anaM
   -> m t
 anaM g = a where a = fmap embed . traverse a <=< g
 
-zipo :: (Functor.Foldable g, Functor.Foldable h)
-     => (Base g (h -> c) -> Base h h -> c) -- ^ An algebra for two Foldables
-     -> g                                  -- ^ first fixed point
-     -> h                                  -- ^ second
-     -> c                                  -- ^ result
-zipo alg = cata zalg where zalg x = alg x . project
-
-litArb :: Arbitrary a => Gen (ExprF a r)
-litArb = fmap Lit arbitrary
+litArb :: (Num a, Arbitrary a) => Gen (ExprF a r)
+litArb = Lit . abs <$> arbitrary
 
 numArb :: Num a => r -> [ExprF a r]
 numArb r =
@@ -474,22 +466,28 @@ pprAlg e = case e of
   x :/: y -> parL x . showString " / " . parR y
   x :*: y -> parL x . showString " * " . parL y
   f :$: (_,x) -> shows f . showChar '(' . x . showChar ')'
-  Abs (_,x) -> showString "Abs(" . x . showChar ')'
-  Sig (_,x) -> showString "Sig(" . x . showChar ')'
-  Qut (_,x) (_,y) -> showString "Quot(" . x . showString ", " . y . showChar ')'
-  Rem (_,x) (_,y) -> showString "Rem(" . x . showString ", " . y . showChar ')'
+  Abs (_,x) -> showString "abs(" . x . showChar ')'
+  Sig (_,x) -> showString "signum(" . x . showChar ')'
+  Qut x y -> parL x . showString " // " . parR y
+  Rem x y -> parL x . showString " % " . parR y
   where
     parL (c,p) = showParen (prec e >  c) p
     parR (c,p) = showParen (prec e >= c) p
 
-instance Show a => Show (NumExpr a) where
-  showsPrec _ = zygo prec pprAlg
+instance Show a => Show (NumExpr   a) where showsPrec _ = zygo prec pprAlg
+instance Show a => Show (IntExpr   a) where showsPrec _ = zygo prec pprAlg
+instance Show a => Show (FracExpr  a) where showsPrec _ = zygo prec pprAlg
+instance Show a => Show (FloatExpr a) where showsPrec _ = zygo prec pprAlg
 
-instance Show a => Show (IntExpr a) where
-  showsPrec _ = zygo prec pprAlg
+pattern x :+ y = Fix (x :+: y)
+pattern x :* y = Fix (x :*: y)
 
-instance Show a => Show (FracExpr a) where
-  showsPrec _ = zygo prec pprAlg
-
-instance Show a => Show (FloatExpr a) where
-  showsPrec _ = zygo prec pprAlg
+reassoc :: Ord a => (Plated (e a), Coercible (Expr a) (e a)) => e a -> e a
+reassoc = rewrite (crce reassoc') where
+  crce :: Coercible (Expr a) (e a) => (Expr a -> Maybe (Expr a)) -> e a -> Maybe (e a)
+  crce = coerce
+  reassoc' (a :+ b) | b < a = Just $ b :+ a
+  reassoc' (a :* b) | b < a = Just $ b :* a
+  reassoc' (a :+ (b :+ c)) = Just $ (a :+ b) :+ c
+  reassoc' (a :* (b :* c)) = Just $ (a :* b) :* c
+  reassoc' _ = Nothing

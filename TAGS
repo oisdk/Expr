@@ -1,89 +1,96 @@
 
-./Expr.hs,2513
-module Expr Expr7,8
-data ExprF ExprF20,21
-  Lit Lit21,22
-  (:+:) )24,25
-  (:*:) )25,26
-  Abs Abs26,27
-  Sig Sig27,28
-  Neg Neg28,29
-  Qut Qut31,32
-  Rem Rem32,33
-  (:/:) )35,36
-  (:$:) )38,39
-data Func Func40,41
-    Sin Sin41,42
-    Sin | Cos Cos41,42
-    Sin | Cos | Exp Exp41,42
-    Sin | Cos | Exp | Log Log41,42
-    Sin | Cos | Exp | Log | Tan Tan41,42
-    Sin | Cos | Exp | Log | Tan | Atn Atn41,42
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn41,42
-  | Acs Acs42,43
-  | Acs | Snh Snh42,43
-  | Acs | Snh | Csh Csh42,43
-  | Acs | Snh | Csh | Tnh Tnh42,43
-  | Acs | Snh | Csh | Tnh | Ach Ach42,43
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash42,43
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth42,43
-instance instance45,46
-prec prec104,105
-prec prec105,106
-zipExpr zipExpr117,118
-zipExpr zipExpr125,126
-evalAlg evalAlg138,139
-evalAlg evalAlg139,140
-appF appF151,152
-appF appF152,153
-newtype NumExpr NumExpr168,169
-  NumExpr NumExpr169,170
-  NumExpr { getNumExpr getNumExpr169,170
-coerceNumBi coerceNumBi172,173
-coerceNumBi coerceNumBi173,174
-coerceNumUn coerceNumUn175,176
-coerceNumUn coerceNumUn176,177
-newtype IntExpr IntExpr186,187
-  IntExpr IntExpr187,188
-  IntExpr { getIntExpr getIntExpr187,188
-coerceIntBi coerceIntBi190,191
-coerceIntBi coerceIntBi191,192
-coerceIntUn coerceIntUn193,194
-coerceIntUn coerceIntUn194,195
-newtype FracExpr FracExpr217,218
-  FracExpr FracExpr218,219
-  FracExpr { getFracExpr getFracExpr218,219
-coerceFracBi coerceFracBi221,222
-coerceFracBi coerceFracBi222,223
-coerceFracUn coerceFracUn224,225
-coerceFracUn coerceFracUn225,226
-newtype FloatExpr FloatExpr239,240
-  FloatExpr FloatExpr240,241
-  FloatExpr { getFloatExpr getFloatExpr240,241
-coerceFloatBi coerceFloatBi243,244
-coerceFloatBi coerceFloatBi244,245
-coerceFloatUn coerceFloatUn246,247
-coerceFloatUn coerceFloatUn247,248
-type instance instance276,277
-type instance Base Base276,277
-type instance instance277,278
-type instance instance278,279
-type instance instance279,280
-cataM cataM339,340
-anaM anaM347,348
-zipo zipo349,350
-zipo zipo354,355
-litArb litArb356,357
-litArb litArb357,358
-numArb numArb359,360
-numArb numArb360,361
-intArb intArb367,368
-intArb intArb368,369
-fracArb fracArb372,373
-fracArb fracArb373,374
-floatArb floatArb375,376
-floatArb floatArb376,377
-putAlg putAlg402,403
-putAlg putAlg403,404
-pprAlg pprAlg468,469
-pprAlg pprAlg469,470
+./Expr.hs,2704
+data ExprF ExprF28,29
+  Lit Lit29,30
+  (:+:) )32,33
+  (:*:) )33,34
+  Abs Abs34,35
+  Sig Sig35,36
+  Neg Neg36,37
+  Qut Qut39,40
+  Rem Rem40,41
+  (:/:) )43,44
+  (:$:) )46,47
+type Expr Expr48,49
+type Expr a a48,49
+data Func Func50,51
+    Sin Sin51,52
+    Sin | Cos Cos51,52
+    Sin | Cos | Exp Exp51,52
+    Sin | Cos | Exp | Log Log51,52
+    Sin | Cos | Exp | Log | Tan Tan51,52
+    Sin | Cos | Exp | Log | Tan | Atn Atn51,52
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn51,52
+  | Acs Acs52,53
+  | Acs | Snh Snh52,53
+  | Acs | Snh | Csh Csh52,53
+  | Acs | Snh | Csh | Tnh Tnh52,53
+  | Acs | Snh | Csh | Tnh | Ach Ach52,53
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash52,53
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth52,53
+instance instance55,56
+prec prec131,132
+prec prec132,133
+zipExpr zipExpr144,145
+zipExpr zipExpr152,153
+evalAlg evalAlg165,166
+evalAlg evalAlg166,167
+appF appF178,179
+appF appF179,180
+newtype NumExpr NumExpr195,196
+  NumExpr NumExpr196,197
+  NumExpr { _getNumExpr _getNumExpr196,197
+coerceNumBi coerceNumBi199,200
+coerceNumBi coerceNumBi201,202
+coerceNumUn coerceNumUn203,204
+coerceNumUn coerceNumUn204,205
+newtype IntExpr IntExpr214,215
+  IntExpr IntExpr215,216
+  IntExpr { _getIntExpr _getIntExpr215,216
+coerceIntBi coerceIntBi218,219
+coerceIntBi coerceIntBi220,221
+coerceIntUn coerceIntUn222,223
+coerceIntUn coerceIntUn223,224
+newtype FracExpr FracExpr246,247
+  FracExpr FracExpr247,248
+  FracExpr { _getFracExpr _getFracExpr247,248
+coerceFracBi coerceFracBi250,251
+coerceFracBi coerceFracBi252,253
+coerceFracUn coerceFracUn254,255
+coerceFracUn coerceFracUn255,256
+newtype FloatExpr FloatExpr269,270
+  FloatExpr FloatExpr270,271
+  FloatExpr { _getFloatExpr _getFloatExpr270,271
+coerceFloatBi coerceFloatBi273,274
+coerceFloatBi coerceFloatBi275,276
+coerceFloatUn coerceFloatUn277,278
+coerceFloatUn coerceFloatUn278,279
+type instance instance307,308
+type instance Base Base307,308
+type instance instance308,309
+type instance instance309,310
+type instance instance310,311
+cproject cproject312,313
+cproject cproject313,314
+cembed cembed322,323
+cembed cembed323,324
+platef platef332,333
+platef platef333,334
+anaM anaM346,347
+litArb litArb348,349
+litArb litArb349,350
+numArb numArb351,352
+numArb numArb352,353
+intArb intArb359,360
+intArb intArb360,361
+fracArb fracArb364,365
+fracArb fracArb365,366
+floatArb floatArb367,368
+floatArb floatArb368,369
+putAlg putAlg394,395
+putAlg putAlg395,396
+pprAlg pprAlg460,461
+pprAlg pprAlg461,462
+pattern pattern481,482
+reassoc reassoc484,485
+reassoc reassoc485,486
