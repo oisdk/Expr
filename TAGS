@@ -1,0 +1,55 @@
+
+./Expr.hs,1553
+module Expr Expr5,6
+data ExprF ExprF16,17
+  Lit Lit17,18
+  (:+:) )20,21
+  (:*:) )21,22
+  Abs Abs22,23
+  Sig Sig23,24
+  Neg Neg24,25
+  Qut Qut27,28
+  Rem Rem28,29
+  (:/:) )31,32
+  (:$:) )34,35
+data Func Func36,37
+    Sin Sin37,38
+    Sin | Cos Cos37,38
+    Sin | Cos | Exp Exp37,38
+    Sin | Cos | Exp | Log Log37,38
+    Sin | Cos | Exp | Log | Tan Tan37,38
+    Sin | Cos | Exp | Log | Tan | Atn Atn37,38
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn37,38
+  | Acs Acs38,39
+  | Acs | Snh Snh38,39
+  | Acs | Snh | Csh Csh38,39
+  | Acs | Snh | Csh | Tnh Tnh38,39
+  | Acs | Snh | Csh | Tnh | Ach Ach38,39
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash38,39
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth38,39
+instance instance41,42
+prec prec97,98
+prec prec98,99
+zipExpr zipExpr110,111
+zipExpr zipExpr118,119
+evalAlg evalAlg131,132
+evalAlg evalAlg132,133
+appF appF144,145
+appF appF145,146
+newtype NumExpr NumExpr161,162
+  NumExpr NumExpr162,163
+  NumExpr { getNumExpr getNumExpr162,163
+coerceNumBi coerceNumBi165,166
+coerceNumBi coerceNumBi166,167
+coerceNumUn coerceNumUn168,169
+coerceNumUn coerceNumUn169,170
+newtype FracExpr FracExpr179,180
+  FracExpr FracExpr180,181
+  FracExpr { getFracExpr getFracExpr180,181
+coerceFracBi coerceFracBi183,184
+coerceFracBi coerceFracBi184,185
+coerceFracUn coerceFracUn186,187
+coerceFracUn coerceFracUn187,188
+newtype FloatExpr FloatExpr201,202
+  FloatExpr FloatExpr202,203
+  FloatExpr { getFloatExpr getFloatExpr202,203
