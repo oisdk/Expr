@@ -50,7 +50,7 @@ instance Functor (ExprF a) where
   fmap f = \case
     Lit a   -> Lit a
     x :+: y -> f x :+: f y
-    x :*: y -> f x :+: f y
+    x :*: y -> f x :*: f y
     Abs x   -> Abs (f x)
     Sig x   -> Sig (f x)
     Neg x   -> Neg (f x)
