@@ -2,9 +2,9 @@
 {-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE GADTs            #-}
 {-# LANGUAGE LambdaCase       #-}
+{-# LANGUAGE PatternSynonyms  #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
-{-# LANGUAGE PatternSynonyms  #-}
 
 module Expr
   ( ExprF(..)
@@ -52,14 +52,14 @@ data ExprF a r where
   SigF :: Num a => r -> ExprF a r
   NegF :: Num a => r -> ExprF a r
 
-  -- Integral:
+  -- Integral
   QutF :: Integral a => r -> r -> ExprF a r
   RemF :: Integral a => r -> r -> ExprF a r
 
-  -- Fractional:
+  -- Fractional
   DivF :: Fractional a => r -> r -> ExprF a r
 
-  -- Floating:
+  -- Floating
   AppF :: Floating a => Func -> r -> ExprF a r
 
 data Func =
@@ -142,20 +142,33 @@ instance (Eq a, Eq r) => Eq (ExprF a r) where
   (==) = zipExpr (\_ _ -> False) (==) (==) (==) (&&)
 
 instance (Ord a, Ord r) => Ord (ExprF a r) where
-  compare = zipExpr (comparing prec) compare compare compare mappend
+  compare = zipExpr (comparing uprec) compare compare compare mappend
 
 prec :: ExprF a r -> Int
 prec = \case
-    LitF _   -> 9
-    AbsF _   -> 8
-    SigF _   -> 7
-    AppF _ _ -> 6
-    QutF _ _ -> 5
-    RemF _ _ -> 4
-    DivF _ _ -> 3
-    MulF _ _ -> 2
-    AddF _ _ -> 1
-    NegF _   -> 0
+  LitF _   -> 11
+  AbsF _   -> 10
+  SigF _   -> 10
+  AppF _ _ -> 10
+  QutF _ _ -> 7
+  RemF _ _ -> 7
+  DivF _ _ -> 7
+  MulF _ _ -> 7
+  AddF _ _ -> 6
+  NegF _   -> 0
+
+uprec :: ExprF a r -> Int
+uprec = \case
+  LitF _   -> 9
+  AbsF _   -> 8
+  SigF _   -> 7
+  AppF _ _ -> 6
+  QutF _ _ -> 5
+  RemF _ _ -> 4
+  DivF _ _ -> 3
+  MulF _ _ -> 2
+  AddF _ _ -> 1
+  NegF _   -> 0
 
 zipExpr :: (ExprF a r -> ExprF a r -> b)
         -> (a -> a -> b)
@@ -325,8 +338,7 @@ instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
       floatArb r ++ fmap pure (
       numArb r ++
       fracArb r
-      ) where
-        r = n `div` 2
+      ) where r = n `div` 2
 
 putAlg :: Serialize a => ExprF a (PutM ()) -> PutM ()
 putAlg = \case
@@ -451,16 +463,16 @@ instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
 
 pprAlg :: Show a => ExprF a (Int, ShowS) -> ShowS
 pprAlg e = case e of
-  LitF a        -> shows a
-  NegF x       -> showString "-" . parR x
-  AddF x y     -> parL x . showString " + " . parL y
-  DivF x y     -> parL x . showString " / " . parR y
-  MulF x y     -> parL x . showString " * " . parL y
-  AppF f (_,x) -> shows f . showChar '(' . x . showChar ')'
-  AbsF   (_,x) -> showString "abs(" . x . showChar ')'
-  SigF   (_,x) -> showString "signum(" . x . showChar ')'
-  QutF x y     -> parL x . showString " // " . parR y
-  RemF x y     -> parL x . showString " % " . parR y
+  LitF a   -> shows a
+  NegF (c,x) -> showString "-" . showParen (11>c) x
+  AddF x y -> parL x . showString " + " . parL y
+  DivF x y -> parL x . showString " / " . parR y
+  MulF x y -> parL x . showString " * " . parL y
+  AppF f x -> shows f . showChar ' ' . parR x
+  AbsF x   -> showString "abs " . parR x
+  SigF x   -> showString "signum " . parR x
+  QutF x y -> parL x . showString " // " . parR y
+  RemF x y -> parL x . showString " % "  . parR y
   where
     parL (c,p) = showParen (prec e >  c) p
     parR (c,p) = showParen (prec e >= c) p
@@ -490,18 +502,18 @@ assoc = rewrite $ \case
 -- | Very basic simplification
 simplify :: (Num a, Eq a) => Expr a -> Expr a
 simplify = rewrite $ \case
-  x :+: Lit 0 -> Just x
-  Lit 0 :+: x -> Just x
-  x :/: Lit 1 -> Just x
-  Lit 1 :*: x -> Just x
-  x :*: Lit 1 -> Just x
-  x :^: Lit 1 -> Just x
-  Lit 1 :^: _ -> Just $ Lit 1
-  _ :^: Lit 0 -> Just $ Lit 0
-  Lit 0 :*: _ -> Just $ Lit 0
-  _ :*: Lit 0 -> Just $ Lit 0
-  _ :%: Lit 1 -> Just $ Lit 0
-  Neg (Lit 0) -> Just $ Lit 0
+  x :+: 0 -> Just x
+  0 :+: x -> Just x
+  x :/: 1 -> Just x
+  1 :*: x -> Just x
+  x :*: 1 -> Just x
+  x :^: 1 -> Just x
+  1 :^: _ -> Just $ Lit 1
+  _ :^: 0 -> Just $ Lit 1
+  0 :*: _ -> Just $ Lit 0
+  _ :*: 0 -> Just $ Lit 0
+  _ :%: 1 -> Just $ Lit 0
+  Neg 0   -> Just $ Lit 0
   x :-:  y | x == y -> Just $ Lit 0
   x :/:  y | x == y -> Just $ Lit 1
   x :%:  y | x == y -> Just $ Lit 0
