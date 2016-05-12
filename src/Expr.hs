@@ -32,8 +32,7 @@ module Expr
 import           Control.Lens
 import           Control.Monad
 import           Data.Coerce
-import           Data.Functor.Foldable hiding (Foldable)
-import qualified Data.Functor.Foldable as Functor
+import           Data.Functor.Foldable
 import           Data.Monoid
 import           Data.Ord
 import           Data.Serialize
@@ -332,22 +331,22 @@ cproject = crce project where
   crce :: Coercible (Expr a) (e a) => (Expr a -> ExprF a (Expr a)) -> e a -> ExprF a (e a)
   crce = coerce
 
-instance Functor.Foldable (NumExpr   a) where project = cproject
-instance Functor.Foldable (IntExpr   a) where project = cproject
-instance Functor.Foldable (FracExpr  a) where project = cproject
-instance Functor.Foldable (FloatExpr a) where project = cproject
+instance Recursive (NumExpr   a) where project = cproject
+instance Recursive (IntExpr   a) where project = cproject
+instance Recursive (FracExpr  a) where project = cproject
+instance Recursive (FloatExpr a) where project = cproject
 
 cembed :: Coercible (Expr a) (e a) => ExprF a (e a) -> e a
 cembed = crce embed where
   crce :: Coercible (Expr a) (e a) => (ExprF a (Expr a) -> Expr a) -> ExprF a (e a) -> e a
   crce = coerce
 
-instance Unfoldable (NumExpr   a) where embed = cembed
-instance Unfoldable (IntExpr   a) where embed = cembed
-instance Unfoldable (FracExpr  a) where embed = cembed
-instance Unfoldable (FloatExpr a) where embed = cembed
+instance Corecursive (NumExpr   a) where embed = cembed
+instance Corecursive (IntExpr   a) where embed = cembed
+instance Corecursive (FracExpr  a) where embed = cembed
+instance Corecursive (FloatExpr a) where embed = cembed
 
-platef :: (Unfoldable f, Functor.Foldable f, Traversable (Base f), Applicative m)
+platef :: (Corecursive f, Recursive f, Traversable (Base f), Applicative m)
        => (f -> m f) -> f -> m f
 platef f = fmap embed . traverse f . project
 
@@ -359,7 +358,7 @@ instance Traversable f => Plated (Fix f) where plate = platef
 
 -- | A monadic anamorphism
 anaM
-  :: (Unfoldable t, Traversable (Base t), Monad m)
+  :: (Corecursive t, Traversable (Base t), Monad m)
   => (a -> m (Base t a))        -- ^ a monadic (Base t)-coalgebra
   -> a                          -- ^ seed
   -> m t

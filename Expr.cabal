@@ -20,7 +20,7 @@ library
                      , cereal
                      , QuickCheck
                      , lens
-                     , recursion-schemes
+                     , recursion-schemes >= 5
   ghc-options:         -Wall
   default-language:    Haskell2010
 
@@ -37,4 +37,4 @@ test-suite Expr-test
 
 source-repository head
   type:     git
-  location: https://github.com/githubuser/Expr
+  location: https://github.com/oisdk/Expr

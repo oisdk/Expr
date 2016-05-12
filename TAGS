@@ -3,105 +3,105 @@
 main main1,2
 
 ./src/Expr.hs,2884
-data ExprF ExprF42,43
-  LitF LitF43,44
-  AddF AddF46,47
-  MulF MulF47,48
-  AbsF AbsF48,49
-  SigF SigF49,50
-  NegF NegF50,51
-  QutF QutF53,54
-  RemF RemF54,55
-  DivF DivF57,58
-  AppF AppF60,61
-type Expr Expr62,63
-type Expr a a62,63
-data Func Func64,65
-    Sin Sin65,66
-    Sin | Cos Cos65,66
-    Sin | Cos | Exp Exp65,66
-    Sin | Cos | Exp | Log Log65,66
-    Sin | Cos | Exp | Log | Tan Tan65,66
-    Sin | Cos | Exp | Log | Tan | Atn Atn65,66
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn65,66
-  | Acs Acs66,67
-  | Acs | Snh Snh66,67
-  | Acs | Snh | Csh Csh66,67
-  | Acs | Snh | Csh | Tnh Tnh66,67
-  | Acs | Snh | Csh | Tnh | Ach Ach66,67
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash66,67
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth66,67
-instance instance69,70
+data ExprF ExprF41,42
+  LitF LitF42,43
+  AddF AddF45,46
+  MulF MulF46,47
+  AbsF AbsF47,48
+  SigF SigF48,49
+  NegF NegF49,50
+  QutF QutF52,53
+  RemF RemF53,54
+  DivF DivF56,57
+  AppF AppF59,60
+type Expr Expr61,62
+type Expr a a61,62
+data Func Func63,64
+    Sin Sin64,65
+    Sin | Cos Cos64,65
+    Sin | Cos | Exp Exp64,65
+    Sin | Cos | Exp | Log Log64,65
+    Sin | Cos | Exp | Log | Tan Tan64,65
+    Sin | Cos | Exp | Log | Tan | Atn Atn64,65
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn64,65
+  | Acs Acs65,66
+  | Acs | Snh Snh65,66
+  | Acs | Snh | Csh Csh65,66
+  | Acs | Snh | Csh | Tnh Tnh65,66
+  | Acs | Snh | Csh | Tnh | Ach Ach65,66
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash65,66
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth65,66
+instance instance68,69
+prec prec144,145
 prec prec145,146
-prec prec146,147
-zipExpr zipExpr158,159
-zipExpr zipExpr166,167
+zipExpr zipExpr157,158
+zipExpr zipExpr165,166
+evalAlg evalAlg178,179
 evalAlg evalAlg179,180
-evalAlg evalAlg180,181
+appF appF191,192
 appF appF192,193
-appF appF193,194
-newtype NumExpr NumExpr209,210
-  NumExpr NumExpr210,211
-  NumExpr { _getNumExpr _getNumExpr210,211
-coerceNumBi coerceNumBi213,214
-coerceNumBi coerceNumBi215,216
+newtype NumExpr NumExpr208,209
+  NumExpr NumExpr209,210
+  NumExpr { _getNumExpr _getNumExpr209,210
+coerceNumBi coerceNumBi212,213
+coerceNumBi coerceNumBi214,215
+coerceNumUn coerceNumUn216,217
 coerceNumUn coerceNumUn217,218
-coerceNumUn coerceNumUn218,219
-newtype IntExpr IntExpr228,229
-  IntExpr IntExpr229,230
-  IntExpr { _getIntExpr _getIntExpr229,230
-coerceIntBi coerceIntBi232,233
-coerceIntBi coerceIntBi234,235
+newtype IntExpr IntExpr227,228
+  IntExpr IntExpr228,229
+  IntExpr { _getIntExpr _getIntExpr228,229
+coerceIntBi coerceIntBi231,232
+coerceIntBi coerceIntBi233,234
+coerceIntUn coerceIntUn235,236
 coerceIntUn coerceIntUn236,237
-coerceIntUn coerceIntUn237,238
-newtype FracExpr FracExpr263,264
-  FracExpr FracExpr264,265
-  FracExpr { _getFracExpr _getFracExpr264,265
-coerceFracBi coerceFracBi267,268
-coerceFracBi coerceFracBi269,270
+newtype FracExpr FracExpr262,263
+  FracExpr FracExpr263,264
+  FracExpr { _getFracExpr _getFracExpr263,264
+coerceFracBi coerceFracBi266,267
+coerceFracBi coerceFracBi268,269
+coerceFracUn coerceFracUn270,271
 coerceFracUn coerceFracUn271,272
-coerceFracUn coerceFracUn272,273
-newtype FloatExpr FloatExpr286,287
-  FloatExpr FloatExpr287,288
-  FloatExpr { _getFloatExpr _getFloatExpr287,288
-coerceFloatBi coerceFloatBi290,291
-coerceFloatBi coerceFloatBi292,293
+newtype FloatExpr FloatExpr285,286
+  FloatExpr FloatExpr286,287
+  FloatExpr { _getFloatExpr _getFloatExpr286,287
+coerceFloatBi coerceFloatBi289,290
+coerceFloatBi coerceFloatBi291,292
+coerceFloatUn coerceFloatUn293,294
 coerceFloatUn coerceFloatUn294,295
-coerceFloatUn coerceFloatUn295,296
+type instance instance323,324
+type instance Base Base323,324
 type instance instance324,325
-type instance Base Base324,325
 type instance instance325,326
 type instance instance326,327
-type instance instance327,328
+cproject cproject328,329
 cproject cproject329,330
-cproject cproject330,331
+cembed cembed338,339
 cembed cembed339,340
-cembed cembed340,341
-platef platef349,350
-platef platef351,352
-anaM anaM365,366
+platef platef348,349
+platef platef350,351
+anaM anaM364,365
+litArb litArb366,367
 litArb litArb367,368
-litArb litArb368,369
+numArb numArb369,370
 numArb numArb370,371
-numArb numArb371,372
+intArb intArb377,378
 intArb intArb378,379
-intArb intArb379,380
+fracArb fracArb382,383
 fracArb fracArb383,384
-fracArb fracArb384,385
+floatArb floatArb385,386
 floatArb floatArb386,387
-floatArb floatArb387,388
+putAlg putAlg412,413
 putAlg putAlg413,414
-putAlg putAlg414,415
+pprAlg pprAlg478,479
 pprAlg pprAlg479,480
-pprAlg pprAlg480,481
-pattern pattern500,501
-class ExprType ExprType512,513
-class ExprType ExprType512,513
-class ExprType e where exprIso exprIso512,513
+pattern pattern499,500
+class ExprType ExprType511,512
+class ExprType ExprType511,512
+class ExprType e where exprIso exprIso511,512
+assoc assoc518,519
 assoc assoc519,520
-assoc assoc520,521
+simplify simplify524,525
 simplify simplify525,526
-simplify simplify526,527
 
 ./test/expr-tests.hs,490
 module Main Main2,3
