@@ -3,86 +3,86 @@
 main main1,2
 
 ./src/Expr.hs,2179
-data ExprF ExprF45,46
-  LitF LitF46,47
-  AddF AddF49,50
-  MulF MulF50,51
-  AbsF AbsF51,52
-  SigF SigF52,53
-  NegF NegF53,54
-  QutF QutF56,57
-  RemF RemF57,58
-  DivF DivF60,61
-  AppF AppF63,64
-data Func Func65,66
-    Sin Sin66,67
-    Sin | Cos Cos66,67
-    Sin | Cos | Exp Exp66,67
-    Sin | Cos | Exp | Log Log66,67
-    Sin | Cos | Exp | Log | Tan Tan66,67
-    Sin | Cos | Exp | Log | Tan | Atn Atn66,67
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn66,67
-  | Acs Acs67,68
-  | Acs | Snh Snh67,68
-  | Acs | Snh | Csh Csh67,68
-  | Acs | Snh | Csh | Tnh Tnh67,68
-  | Acs | Snh | Csh | Tnh | Ach Ach67,68
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash67,68
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth67,68
-instance instance70,71
+data ExprF ExprF44,45
+  LitF LitF45,46
+  AddF AddF48,49
+  MulF MulF49,50
+  AbsF AbsF50,51
+  SigF SigF51,52
+  NegF NegF52,53
+  QutF QutF55,56
+  RemF RemF56,57
+  DivF DivF59,60
+  AppF AppF62,63
+data Func Func64,65
+    Sin Sin65,66
+    Sin | Cos Cos65,66
+    Sin | Cos | Exp Exp65,66
+    Sin | Cos | Exp | Log Log65,66
+    Sin | Cos | Exp | Log | Tan Tan65,66
+    Sin | Cos | Exp | Log | Tan | Atn Atn65,66
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn65,66
+  | Acs Acs66,67
+  | Acs | Snh Snh66,67
+  | Acs | Snh | Csh Csh66,67
+  | Acs | Snh | Csh | Tnh Tnh66,67
+  | Acs | Snh | Csh | Tnh | Ach Ach66,67
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash66,67
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth66,67
+instance instance69,70
+prec prec146,147
 prec prec147,148
-prec prec148,149
-zipExpr zipExpr160,161
-zipExpr zipExpr168,169
+zipExpr zipExpr159,160
+zipExpr zipExpr167,168
+appF appF180,181
 appF appF181,182
-appF appF182,183
-newtype Expr Expr200,201
-  Expr Expr201,202
-  Expr { _getExpr _getExpr201,202
-coerceBi coerceBi204,205
-coerceBi coerceBi206,207
+newtype Expr Expr199,200
+  Expr Expr200,201
+  Expr { _getExpr _getExpr200,201
+coerceBi coerceBi203,204
+coerceBi coerceBi205,206
+coerceUn coerceUn207,208
 coerceUn coerceUn208,209
-coerceUn coerceUn209,210
-type instance instance251,252
-type instance Base Base251,252
+type instance instance250,251
+type instance Base Base250,251
+evalAlg evalAlg256,257
 evalAlg evalAlg257,258
-evalAlg evalAlg258,259
+eval eval269,270
 eval eval270,271
-eval eval271,272
+safeEvalAlg safeEvalAlg272,273
 safeEvalAlg safeEvalAlg273,274
-safeEvalAlg safeEvalAlg274,275
+safeEval safeEval278,279
 safeEval safeEval279,280
-safeEval safeEval280,281
-cataM cataM288,289
-anaM anaM296,297
+cataM cataM287,288
+anaM anaM295,296
+litArb litArb297,298
 litArb litArb298,299
-litArb litArb299,300
+numArb numArb300,301
 numArb numArb301,302
-numArb numArb302,303
+intArb intArb308,309
 intArb intArb309,310
-intArb intArb310,311
+fracArb fracArb313,314
 fracArb fracArb314,315
-fracArb fracArb315,316
+floatArb floatArb316,317
 floatArb floatArb317,318
-floatArb floatArb318,319
+putAlg putAlg330,331
 putAlg putAlg331,332
-putAlg putAlg332,333
-newtype NumExpr NumExpr371,372
-  NumExpr NumExpr372,373
-  NumExpr { getNumExpr getNumExpr372,373
-newtype IntExpr IntExpr378,379
-  IntExpr IntExpr379,380
-  IntExpr { getIntExpr getIntExpr379,380
-newtype FracExpr FracExpr385,386
-  FracExpr FracExpr386,387
-  FracExpr { getFracExpr getFracExpr386,387
+newtype NumExpr NumExpr370,371
+  NumExpr NumExpr371,372
+  NumExpr { getNumExpr getNumExpr371,372
+newtype IntExpr IntExpr377,378
+  IntExpr IntExpr378,379
+  IntExpr { getIntExpr getIntExpr378,379
+newtype FracExpr FracExpr384,385
+  FracExpr FracExpr385,386
+  FracExpr { getFracExpr getFracExpr385,386
+pprAlg pprAlg451,452
 pprAlg pprAlg452,453
-pprAlg pprAlg453,454
-pattern pattern470,471
+pattern pattern469,470
+assoc assoc483,484
 assoc assoc484,485
-assoc assoc485,486
+simplify simplify490,491
 simplify simplify491,492
-simplify simplify492,493
 
 ./test/expr-tests.hs,598
 module Main Main2,3
