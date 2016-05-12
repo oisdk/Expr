@@ -4,6 +4,7 @@
 {-# LANGUAGE LambdaCase       #-}
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
+{-# LANGUAGE PatternSynonyms  #-}
 
 module Expr
   ( ExprF(..)
@@ -29,21 +30,21 @@ data ExprF a r where
   Lit :: a -> ExprF a r
 
   -- Num
-  (:+:) :: Num a => r -> r -> ExprF a r
-  (:*:) :: Num a => r -> r -> ExprF a r
-  Abs   :: Num a => r -> ExprF a r
-  Sig   :: Num a => r -> ExprF a r
-  Neg   :: Num a => r -> ExprF a r
+  AddF :: Num a => r -> r -> ExprF a r
+  MulF :: Num a => r -> r -> ExprF a r
+  AbsF :: Num a => r -> ExprF a r
+  SigF :: Num a => r -> ExprF a r
+  NegF :: Num a => r -> ExprF a r
 
   -- Integral:
-  Qut :: Integral a => r -> r -> ExprF a r
-  Rem :: Integral a => r -> r -> ExprF a r
+  QutF :: Integral a => r -> r -> ExprF a r
+  RemF :: Integral a => r -> r -> ExprF a r
 
   -- Fractional:
-  (:/:) :: Fractional a => r -> r -> ExprF a r
+  DivF :: Fractional a => r -> r -> ExprF a r
 
   -- Floating:
-  (:$:) :: Floating a => Func -> r -> ExprF a r
+  AppF :: Floating a => Func -> r -> ExprF a r
 
 type Expr a = Fix (ExprF a)
 
@@ -75,52 +76,52 @@ instance Serialize Func
 instance Functor (ExprF a) where
   fmap f = \case
     Lit a   -> Lit a
-    x :+: y -> f x :+: f y
-    x :*: y -> f x :*: f y
-    Abs x   -> Abs (f x)
-    Sig x   -> Sig (f x)
-    Neg x   -> Neg (f x)
-    Qut x y -> Qut (f x) (f y)
-    Rem x y -> Rem (f x) (f y)
-    x :/: y -> f x :/: f y
-    g :$: x -> g :$: f x
+    AddF x y -> AddF (f x) (f y)
+    MulF x y -> MulF (f x) (f y)
+    AbsF x   -> AbsF (f x)
+    SigF x   -> SigF (f x)
+    NegF x   -> NegF (f x)
+    QutF x y -> QutF (f x) (f y)
+    RemF x y -> RemF (f x) (f y)
+    DivF x y -> DivF (f x) (f y)
+    AppF g x -> AppF g (f x)
 
 instance Foldable (ExprF a) where
   foldr f i = \case
     Lit _   -> i
-    x :+: y -> f x (f y i)
-    x :*: y -> f x (f y i)
-    Abs x   -> f x i
-    Sig x   -> f x i
-    Neg x   -> f x i
-    Qut x y -> f x (f y i)
-    Rem x y -> f x (f y i)
-    x :/: y -> f x (f y i)
-    _ :$: x -> f x i
+    AddF x y -> f x (f y i)
+    MulF x y -> f x (f y i)
+    AbsF x   -> f x i
+    SigF x   -> f x i
+    NegF x   -> f x i
+    QutF x y -> f x (f y i)
+    RemF x y -> f x (f y i)
+    DivF x y -> f x (f y i)
+    AppF _ x -> f x i
   foldMap f = \case
     Lit _   -> mempty
-    x :+: y -> f x <> f y
-    x :*: y -> f x <> f y
-    Abs x   -> f x
-    Sig x   -> f x
-    Neg x   -> f x
-    Qut x y -> f x <> f y
-    Rem x y -> f x <> f y
-    x :/: y -> f x <> f y
-    _ :$: x -> f x
+    AddF x y -> f x <> f y
+    MulF x y -> f x <> f y
+    AbsF x   -> f x
+    SigF x   -> f x
+    NegF x   -> f x
+    QutF x y -> f x <> f y
+    RemF x y -> f x <> f y
+    DivF x y -> f x <> f y
+    AppF _ x -> f x
 
 instance Traversable (ExprF a) where
   traverse f = \case
     Lit a   -> pure (Lit a)
-    x :+: y -> (:+:) <$> f x <*> f y
-    x :*: y -> (:*:) <$> f x <*> f y
-    Abs x   -> Abs <$> f x
-    Sig x   -> Sig <$> f x
-    Neg x   -> Neg <$> f x
-    Qut x y -> Qut <$> f x <*> f y
-    Rem x y -> Rem <$> f x <*> f y
-    x :/: y -> (:/:) <$> f x <*> f y
-    g :$: x -> (:$:) g <$> f x
+    AddF x y -> AddF <$> f x <*> f y
+    MulF x y -> MulF <$> f x <*> f y
+    AbsF x   -> AbsF <$> f x
+    SigF x   -> SigF <$> f x
+    NegF x   -> NegF <$> f x
+    QutF x y -> QutF <$> f x <*> f y
+    RemF x y -> RemF <$> f x <*> f y
+    DivF x y -> DivF <$> f x <*> f y
+    AppF g x -> AppF g <$> f x
 
 instance (Eq a, Eq r) => Eq (ExprF a r) where
   (==) = zipExpr (\_ _ -> False) (==) (==) (==) (&&)
@@ -130,16 +131,16 @@ instance (Ord a, Ord r) => Ord (ExprF a r) where
 
 prec :: ExprF a r -> Int
 prec = \case
-    Lit _   -> 9
-    Abs _   -> 8
-    Sig _   -> 7
-    _ :$: _ -> 6
-    Neg _   -> 5
-    Qut _ _ -> 4
-    Rem _ _ -> 3
-    _ :/: _ -> 2
-    _ :*: _ -> 1
-    _ :+: _ -> 0
+    Lit _    -> 9
+    AbsF _   -> 8
+    SigF _   -> 7
+    AppF _ _ -> 6
+    NegF _   -> 5
+    QutF _ _ -> 4
+    RemF _ _ -> 3
+    DivF _ _ -> 2
+    MulF _ _ -> 1
+    AddF _ _ -> 0
 
 zipExpr :: (ExprF a r -> ExprF a r -> b)
         -> (a -> a -> b)
@@ -150,30 +151,30 @@ zipExpr :: (ExprF a r -> ExprF a r -> b)
         -> ExprF a r
         -> b
 zipExpr d n r f c = i where
-  i (Lit a  ) (Lit b  ) = n a b
-  i (w :+: x) (y :+: z) = r w y `c` r x z
-  i (w :*: x) (y :*: z) = r w y `c` r x z
-  i (Abs x  ) (Abs y  ) = r x y
-  i (Sig x  ) (Sig y  ) = r x y
-  i (Neg x  ) (Neg y  ) = r x y
-  i (Qut w x) (Qut y z) = r w y `c` r x z
-  i (Rem w x) (Rem y z) = r w y `c` r x z
-  i (w :/: x) (y :/: z) = r w y `c` r x z
-  i (w :$: x) (y :$: z) = f w y `c` r x z
+  i (Lit a   ) (Lit b   ) = n a b
+  i (AddF w x) (AddF y z) = r w y `c` r x z
+  i (MulF w x) (MulF y z) = r w y `c` r x z
+  i (AbsF x  ) (AbsF y  ) = r x y
+  i (SigF x  ) (SigF y  ) = r x y
+  i (NegF x  ) (NegF y  ) = r x y
+  i (QutF w x) (QutF y z) = r w y `c` r x z
+  i (RemF w x) (RemF y z) = r w y `c` r x z
+  i (DivF w x) (DivF y z) = r w y `c` r x z
+  i (AppF w x) (AppF y z) = f w y `c` r x z
   i x y = d x y
 
 evalAlg :: ExprF a a -> a
 evalAlg = \case
     Lit a   -> a
-    x :+: y -> x + y
-    x :*: y -> x * y
-    Abs x   -> abs x
-    Sig x   -> signum x
-    Neg x   -> negate x
-    Qut x y -> quot x y
-    Rem x y -> rem x y
-    x :/: y -> x / y
-    f :$: x -> appF f x
+    AddF x y -> x + y
+    MulF x y -> x * y
+    AbsF x   -> abs x
+    SigF x   -> signum x
+    NegF x   -> negate x
+    QutF x y -> quot x y
+    RemF x y -> rem x y
+    DivF x y -> x / y
+    AppF f x -> appF f x
 
 appF :: Floating a => Func -> a -> a
 appF = \case
@@ -204,11 +205,11 @@ coerceNumUn :: (Expr a -> ExprF a (Expr a)) -> NumExpr a -> NumExpr a
 coerceNumUn = coerce
 
 instance Num a => Num (NumExpr a) where
-  (+) = coerceNumBi (:+:)
-  (*) = coerceNumBi (:*:)
-  abs = coerceNumUn Abs
-  signum = coerceNumUn Sig
-  negate = coerceNumUn Neg
+  (+) = coerceNumBi AddF
+  (*) = coerceNumBi MulF
+  abs = coerceNumUn AbsF
+  signum = coerceNumUn SigF
+  negate = coerceNumUn NegF
   fromInteger = NumExpr . Fix . Lit . fromInteger
 
 newtype IntExpr a =
@@ -223,11 +224,11 @@ coerceIntUn :: (Expr a -> ExprF a (Expr a)) -> IntExpr a -> IntExpr a
 coerceIntUn = coerce
 
 instance Num a => Num (IntExpr a) where
-  (+) = coerceIntBi (:+:)
-  (*) = coerceIntBi (:*:)
-  abs = coerceIntUn Abs
-  signum = coerceIntUn Sig
-  negate = coerceIntUn Neg
+  (+) = coerceIntBi AddF
+  (*) = coerceIntBi MulF
+  abs = coerceIntUn AbsF
+  signum = coerceIntUn SigF
+  negate = coerceIntUn NegF
   fromInteger = IntExpr . Fix . Lit . fromInteger
 
 instance Real a => Real (IntExpr a) where
@@ -239,9 +240,9 @@ instance Enum a => Enum (IntExpr a) where
 
 instance Integral a => Integral (IntExpr a) where
   toInteger = toInteger . cata evalAlg
-  quotRem a b = (coerceIntBi Qut a b, coerceIntBi Rem a b)
-  quot = coerceIntBi Qut
-  rem  = coerceIntBi Rem
+  quotRem a b = (coerceIntBi QutF a b, coerceIntBi RemF a b)
+  quot = coerceIntBi QutF
+  rem  = coerceIntBi RemF
 
 newtype FracExpr a =
   FracExpr { _getFracExpr :: Expr a
@@ -255,16 +256,16 @@ coerceFracUn :: (Expr a -> ExprF a (Expr a)) -> FracExpr a -> FracExpr a
 coerceFracUn = coerce
 
 instance Num a => Num (FracExpr a) where
-  (+) = coerceFracBi (:+:)
-  (*) = coerceFracBi (:*:)
-  abs = coerceFracUn Abs
-  signum = coerceFracUn Sig
-  negate = coerceFracUn Neg
+  (+) = coerceFracBi AddF
+  (*) = coerceFracBi MulF
+  abs = coerceFracUn AbsF
+  signum = coerceFracUn SigF
+  negate = coerceFracUn NegF
   fromInteger = FracExpr . Fix . Lit . fromInteger
 
 instance Fractional a => Fractional (FracExpr a) where
   fromRational = FracExpr . Fix . Lit . fromRational
-  (/) = coerceFracBi (:/:)
+  (/) = coerceFracBi DivF
 
 newtype FloatExpr a =
   FloatExpr { _getFloatExpr :: Expr a
@@ -278,31 +279,31 @@ coerceFloatUn :: (Expr a -> ExprF a (Expr a)) -> FloatExpr a -> FloatExpr a
 coerceFloatUn = coerce
 
 instance Num a => Num (FloatExpr a) where
-  (+) = coerceFloatBi (:+:)
-  (*) = coerceFloatBi (:*:)
-  abs = coerceFloatUn Abs
-  signum = coerceFloatUn Sig
-  negate = coerceFloatUn Neg
+  (+) = coerceFloatBi AddF
+  (*) = coerceFloatBi MulF
+  abs = coerceFloatUn AbsF
+  signum = coerceFloatUn SigF
+  negate = coerceFloatUn NegF
   fromInteger = FloatExpr . Fix . Lit . fromInteger
 
 instance Fractional a => Fractional (FloatExpr a) where
   fromRational = FloatExpr . Fix . Lit . fromRational
-  (/) = coerceFloatBi (:/:)
+  (/) = coerceFloatBi DivF
 
 instance Floating a => Floating (FloatExpr a) where
   pi    = (FloatExpr . Fix . Lit) pi
-  exp   = coerceFloatUn $ (:$:) Exp
-  log   = coerceFloatUn $ (:$:) Log
-  sin   = coerceFloatUn $ (:$:) Sin
-  cos   = coerceFloatUn $ (:$:) Cos
-  asin  = coerceFloatUn $ (:$:) Asn
-  acos  = coerceFloatUn $ (:$:) Acs
-  atan  = coerceFloatUn $ (:$:) Atn
-  sinh  = coerceFloatUn $ (:$:) Snh
-  cosh  = coerceFloatUn $ (:$:) Csh
-  asinh = coerceFloatUn $ (:$:) Ash
-  acosh = coerceFloatUn $ (:$:) Ach
-  atanh = coerceFloatUn $ (:$:) Ath
+  exp   = coerceFloatUn $ AppF Exp
+  log   = coerceFloatUn $ AppF Log
+  sin   = coerceFloatUn $ AppF Sin
+  cos   = coerceFloatUn $ AppF Cos
+  asin  = coerceFloatUn $ AppF Asn
+  acos  = coerceFloatUn $ AppF Acs
+  atan  = coerceFloatUn $ AppF Atn
+  sinh  = coerceFloatUn $ AppF Snh
+  cosh  = coerceFloatUn $ AppF Csh
+  asinh = coerceFloatUn $ AppF Ash
+  acosh = coerceFloatUn $ AppF Ach
+  atanh = coerceFloatUn $ AppF Ath
 
 type instance Base (NumExpr   a) = ExprF a
 type instance Base (IntExpr   a) = ExprF a
@@ -350,22 +351,22 @@ litArb = Lit . abs <$> arbitrary
 
 numArb :: Num a => r -> [ExprF a r]
 numArb r =
-  [ r :+: r
-  , r :*: r
-  , Abs r
-  , Sig r
-  , Neg r ]
+  [ AddF r r
+  , MulF r r
+  , AbsF r
+  , SigF r
+  , NegF r ]
 
 intArb :: Integral a => r -> [ExprF a r]
 intArb r =
-  [ Qut r r
-  , Rem r r ]
+  [ QutF r r
+  , RemF r r ]
 
 fracArb :: Fractional a => r -> [ExprF a r]
-fracArb r = [ r :/: r ]
+fracArb r = [ DivF r r ]
 
 floatArb :: Floating a => r -> [Gen (ExprF a r)]
-floatArb r = [flip (:$:) r <$> arbitrary]
+floatArb r = [flip AppF r <$> arbitrary]
 
 instance (Arbitrary a, Num a) => Arbitrary (NumExpr a) where
   arbitrary = sized (anaM alg) where
@@ -394,26 +395,26 @@ instance (Arbitrary a, Floating a) => Arbitrary (FloatExpr a) where
 putAlg :: Serialize a => ExprF a (PutM ()) -> PutM ()
 putAlg = \case
   Lit a   -> putWord8 0 *> put a
-  Abs x   -> putWord8 1 *> x
-  Sig x   -> putWord8 2 *> x
-  Qut x y -> putWord8 3 *> x *> y
-  Rem x y -> putWord8 4 *> x *> y
-  f :$: x -> putWord8 5 *> put f *> x
-  Neg x   -> putWord8 6 *> x
-  x :/: y -> putWord8 7 *> x *> y
-  x :*: y -> putWord8 8 *> x *> y
-  x :+: y -> putWord8 9 *> x *> y
+  AbsF x   -> putWord8 1 *> x
+  SigF x   -> putWord8 2 *> x
+  QutF x y -> putWord8 3 *> x *> y
+  RemF x y -> putWord8 4 *> x *> y
+  AppF f x -> putWord8 5 *> put f *> x
+  NegF x   -> putWord8 6 *> x
+  DivF x y -> putWord8 7 *> x *> y
+  MulF x y -> putWord8 8 *> x *> y
+  AddF x y -> putWord8 9 *> x *> y
 
 instance (Num a, Serialize a) => Serialize (NumExpr a) where
   put = cata putAlg
   get = anaM (const $ alg =<< getWord8) () where
     alg = \case
       0 -> Lit <$> get
-      1 -> pure $ Abs ()
-      2 -> pure $ Sig ()
-      6 -> pure $ Neg ()
-      8 -> pure $ () :*: ()
-      9 -> pure $ () :+: ()
+      1 -> pure $ AbsF ()
+      2 -> pure $ SigF()
+      6 -> pure $ NegF ()
+      8 -> pure $ MulF () ()
+      9 -> pure $ AddF () ()
       _ -> error "corrupted binary"
 
 instance (Integral a, Serialize a) => Serialize (IntExpr a) where
@@ -421,13 +422,13 @@ instance (Integral a, Serialize a) => Serialize (IntExpr a) where
   get = anaM (const $ alg =<< getWord8) () where
     alg = \case
       0 -> Lit <$> get
-      1 -> pure $ Abs ()
-      2 -> pure $ Sig ()
-      3 -> pure $ Qut () ()
-      4 -> pure $ Rem () ()
-      6 -> pure $ Neg ()
-      8 -> pure $ () :*: ()
-      9 -> pure $ () :+: ()
+      1 -> pure $ AbsF ()
+      2 -> pure $ SigF()
+      3 -> pure $ QutF () ()
+      4 -> pure $ RemF () ()
+      6 -> pure $ NegF ()
+      8 -> pure $ MulF () ()
+      9 -> pure $ AddF () ()
       _ -> error "corrupted binary"
 
 instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
@@ -435,12 +436,12 @@ instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
   get = anaM (const $ alg =<< getWord8) () where
     alg = \case
       0 -> Lit <$> get
-      1 -> pure $ Abs ()
-      2 -> pure $ Sig ()
-      6 -> pure $ Neg ()
-      7 -> pure $ () :/: ()
-      8 -> pure $ () :*: ()
-      9 -> pure $ () :+: ()
+      1 -> pure $ AbsF ()
+      2 -> pure $ SigF()
+      6 -> pure $ NegF ()
+      7 -> pure $ DivF () ()
+      8 -> pure $ MulF () ()
+      9 -> pure $ AddF () ()
       _ -> error "corrupted binary"
 
 instance (Floating a, Serialize a) => Serialize (FloatExpr a) where
@@ -448,27 +449,27 @@ instance (Floating a, Serialize a) => Serialize (FloatExpr a) where
   get = anaM (const $ alg =<< getWord8) () where
     alg = \case
       0 -> Lit <$> get
-      1 -> pure $ Abs ()
-      2 -> pure $ Sig ()
-      5 -> (:$:) <$> get ?? ()
-      6 -> pure $ Neg ()
-      7 -> pure $ () :/: ()
-      8 -> pure $ () :*: ()
-      9 -> pure $ () :+: ()
+      1 -> pure $ AbsF ()
+      2 -> pure $ SigF()
+      5 -> AppF <$> get ?? ()
+      6 -> pure $ NegF ()
+      7 -> pure $ DivF () ()
+      8 -> pure $ MulF () ()
+      9 -> pure $ AddF () ()
       _ -> error "corrupted binary"
 
 pprAlg :: Show a => ExprF a (Int, ShowS) -> ShowS
 pprAlg e = case e of
-  Lit a   -> shows a
-  Neg x   -> showString "-" . parR x
-  x :+: y -> parL x . showString " + " . parL y
-  x :/: y -> parL x . showString " / " . parR y
-  x :*: y -> parL x . showString " * " . parL y
-  f :$: (_,x) -> shows f . showChar '(' . x . showChar ')'
-  Abs (_,x) -> showString "abs(" . x . showChar ')'
-  Sig (_,x) -> showString "signum(" . x . showChar ')'
-  Qut x y -> parL x . showString " // " . parR y
-  Rem x y -> parL x . showString " % " . parR y
+  Lit a        -> shows a
+  NegF x       -> showString "-" . parR x
+  AddF x y     -> parL x . showString " + " . parL y
+  DivF x y     -> parL x . showString " / " . parR y
+  MulF x y     -> parL x . showString " * " . parL y
+  AppF f (_,x) -> shows f . showChar '(' . x . showChar ')'
+  AbsF   (_,x) -> showString "abs(" . x . showChar ')'
+  SigF   (_,x) -> showString "signum(" . x . showChar ')'
+  QutF x y     -> parL x . showString " // " . parR y
+  RemF x y     -> parL x . showString " % " . parR y
   where
     parL (c,p) = showParen (prec e >  c) p
     parR (c,p) = showParen (prec e >= c) p
