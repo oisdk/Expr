@@ -9,11 +9,11 @@
 
 module Expr
   ( ExprF(..)
-  , NumExpr
-  , IntExpr
-  , FracExpr
-  , FloatExpr
   , Func(..)
+  , Expr
+  , NumExpr(..)
+  , IntExpr(..)
+  , FracExpr(..)
   , pattern (:*:)
   , pattern (:+:)
   , pattern (:-:)
@@ -27,6 +27,8 @@ module Expr
   , pattern Lit
   , assoc
   , simplify
+  , eval
+  , safeEval
   ) where
 
 import           Control.Lens
@@ -59,7 +61,7 @@ data ExprF a r where
   -- Floating:
   AppF :: Floating a => Func -> r -> ExprF a r
 
-type Expr a = Fix (ExprF a)
+-- type Fix (ExprF a) = Fix (ExprF a)
 
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
@@ -144,7 +146,7 @@ instance (Ord a, Ord r) => Ord (ExprF a r) where
 
 prec :: ExprF a r -> Int
 prec = \case
-    LitF _    -> 9
+    LitF _   -> 9
     AbsF _   -> 8
     SigF _   -> 7
     AppF _ _ -> 6
@@ -164,7 +166,7 @@ zipExpr :: (ExprF a r -> ExprF a r -> b)
         -> ExprF a r
         -> b
 zipExpr d n r f c = i where
-  i (LitF a   ) (LitF b   ) = n a b
+  i (LitF a  ) (LitF b  ) = n a b
   i (AddF w x) (AddF y z) = r w y `c` r x z
   i (MulF w x) (MulF y z) = r w y `c` r x z
   i (AbsF x  ) (AbsF y  ) = r x y
@@ -175,19 +177,6 @@ zipExpr d n r f c = i where
   i (DivF w x) (DivF y z) = r w y `c` r x z
   i (AppF w x) (AppF y z) = f w y `c` r x z
   i x y = d x y
-
-evalAlg :: ExprF a a -> a
-evalAlg = \case
-  LitF a   -> a
-  AddF x y -> x + y
-  MulF x y -> x * y
-  AbsF x   -> abs x
-  SigF x   -> signum x
-  NegF x   -> negate x
-  QutF x y -> quot x y
-  RemF x y -> rem x y
-  DivF x y -> x / y
-  AppF f x -> appF f x
 
 appF :: Floating a => Func -> a -> a
 appF = \case
@@ -206,155 +195,94 @@ appF = \case
   Ash -> asinh
   Ath -> atanh
 
-newtype NumExpr a =
-  NumExpr { _getNumExpr :: Expr a
-          } deriving (Eq, Ord)
+newtype Expr a =
+  Expr { _getExpr :: ExprF a (Expr a)
+       } deriving (Eq, Ord)
 
-coerceNumBi :: (Expr a -> Expr a -> ExprF a (Expr a))
-            -> NumExpr a -> NumExpr a -> NumExpr a
-coerceNumBi = coerce
+coerceBi :: (Expr a -> Expr a -> ExprF a (Expr a))
+         -> Expr a -> Expr a -> Expr a
+coerceBi = coerce
 
-coerceNumUn :: (Expr a -> ExprF a (Expr a)) -> NumExpr a -> NumExpr a
-coerceNumUn = coerce
+coerceUn :: (Expr a -> ExprF a (Expr a)) -> Expr a -> Expr a
+coerceUn = coerce
 
-instance Num a => Num (NumExpr a) where
-  (+) = coerceNumBi AddF
-  (*) = coerceNumBi MulF
-  abs = coerceNumUn AbsF
-  signum = coerceNumUn SigF
-  negate = coerceNumUn NegF
-  fromInteger = NumExpr . Fix . LitF . fromInteger
+instance Num a => Num (Expr a) where
+  (+) = coerceBi AddF
+  (*) = coerceBi MulF
+  abs = coerceUn AbsF
+  signum = coerceUn SigF
+  negate = coerceUn NegF
+  fromInteger = Expr . LitF . fromInteger
 
-newtype IntExpr a =
-  IntExpr { _getIntExpr :: Expr a
-          } deriving (Eq, Ord)
-
-coerceIntBi :: (Expr a -> Expr a -> ExprF a (Expr a))
-            -> IntExpr a -> IntExpr a -> IntExpr a
-coerceIntBi = coerce
-
-coerceIntUn :: (Expr a -> ExprF a (Expr a)) -> IntExpr a -> IntExpr a
-coerceIntUn = coerce
-
--- eval :: ExprType e => e a -> a
--- eval = cata evalAlg . view exprIso
-
-instance Num a => Num (IntExpr a) where
-  (+) = coerceIntBi AddF
-  (*) = coerceIntBi MulF
-  abs = coerceIntUn AbsF
-  signum = coerceIntUn SigF
-  negate = coerceIntUn NegF
-  fromInteger = IntExpr . Fix . LitF . fromInteger
-
-instance Real a => Real (IntExpr a) where
+instance Real a => Real (Expr a) where
   toRational = toRational . cata evalAlg
 
-instance Enum a => Enum (IntExpr a) where
-  toEnum = IntExpr . Fix . LitF . toEnum
+instance Enum a => Enum (Expr a) where
+  toEnum = Expr . LitF . toEnum
   fromEnum = fromEnum . cata evalAlg
 
-instance Integral a => Integral (IntExpr a) where
+instance Integral a => Integral (Expr a) where
   toInteger = toInteger . cata evalAlg
-  quotRem a b = (coerceIntBi QutF a b, coerceIntBi RemF a b)
-  quot = coerceIntBi QutF
-  rem  = coerceIntBi RemF
+  quotRem a b = (coerceBi QutF a b, coerceBi RemF a b)
+  quot = coerceBi QutF
+  rem  = coerceBi RemF
 
-newtype FracExpr a =
-  FracExpr { _getFracExpr :: Expr a
-           } deriving (Eq, Ord)
+instance Fractional a => Fractional (Expr a) where
+  fromRational = Expr . LitF . fromRational
+  (/) = coerceBi DivF
 
-coerceFracBi :: (Expr a -> Expr a -> ExprF a (Expr a))
-             -> FracExpr a -> FracExpr a -> FracExpr a
-coerceFracBi = coerce
+instance Floating a => Floating (Expr a) where
+  pi    = Expr . LitF $ pi
+  exp   = coerceUn $ AppF Exp
+  log   = coerceUn $ AppF Log
+  sin   = coerceUn $ AppF Sin
+  cos   = coerceUn $ AppF Cos
+  asin  = coerceUn $ AppF Asn
+  acos  = coerceUn $ AppF Acs
+  atan  = coerceUn $ AppF Atn
+  sinh  = coerceUn $ AppF Snh
+  cosh  = coerceUn $ AppF Csh
+  asinh = coerceUn $ AppF Ash
+  acosh = coerceUn $ AppF Ach
+  atanh = coerceUn $ AppF Ath
 
-coerceFracUn :: (Expr a -> ExprF a (Expr a)) -> FracExpr a -> FracExpr a
-coerceFracUn = coerce
+type instance Base (Expr a) = ExprF a
+instance Recursive (Expr a) where project = coerce
+instance Corecursive (Expr a) where embed = coerce
 
-instance Num a => Num (FracExpr a) where
-  (+) = coerceFracBi AddF
-  (*) = coerceFracBi MulF
-  abs = coerceFracUn AbsF
-  signum = coerceFracUn SigF
-  negate = coerceFracUn NegF
-  fromInteger = FracExpr . Fix . LitF . fromInteger
+instance Plated (Expr a) where plate f = fmap embed . traverse f . project
 
-instance Fractional a => Fractional (FracExpr a) where
-  fromRational = FracExpr . Fix . LitF . fromRational
-  (/) = coerceFracBi DivF
+evalAlg :: ExprF a a -> a
+evalAlg = \case
+  LitF a   -> a
+  AddF x y -> x + y
+  MulF x y -> x * y
+  AbsF x   -> abs x
+  SigF x   -> signum x
+  NegF x   -> negate x
+  QutF x y -> quot x y
+  RemF x y -> rem x y
+  DivF x y -> x / y
+  AppF f x -> appF f x
 
-newtype FloatExpr a =
-  FloatExpr { _getFloatExpr :: Expr a
-            } deriving (Eq, Ord)
+eval :: Expr a -> a
+eval = cata evalAlg
 
-coerceFloatBi :: (Expr a -> Expr a -> ExprF a (Expr a))
-              -> FloatExpr a -> FloatExpr a -> FloatExpr a
-coerceFloatBi = coerce
+safeEvalAlg :: Eq a => ExprF a a -> Either String a
+safeEvalAlg = \case
+  DivF _ 0 -> Left "tried to divide by zero"
+  e -> Right (evalAlg e)
 
-coerceFloatUn :: (Expr a -> ExprF a (Expr a)) -> FloatExpr a -> FloatExpr a
-coerceFloatUn = coerce
+safeEval :: Eq a => Expr a -> Either String a
+safeEval = cataM safeEvalAlg
 
-instance Num a => Num (FloatExpr a) where
-  (+) = coerceFloatBi AddF
-  (*) = coerceFloatBi MulF
-  abs = coerceFloatUn AbsF
-  signum = coerceFloatUn SigF
-  negate = coerceFloatUn NegF
-  fromInteger = FloatExpr . Fix . LitF . fromInteger
-
-instance Fractional a => Fractional (FloatExpr a) where
-  fromRational = FloatExpr . Fix . LitF . fromRational
-  (/) = coerceFloatBi DivF
-
-instance Floating a => Floating (FloatExpr a) where
-  pi    = (FloatExpr . Fix . LitF) pi
-  exp   = coerceFloatUn $ AppF Exp
-  log   = coerceFloatUn $ AppF Log
-  sin   = coerceFloatUn $ AppF Sin
-  cos   = coerceFloatUn $ AppF Cos
-  asin  = coerceFloatUn $ AppF Asn
-  acos  = coerceFloatUn $ AppF Acs
-  atan  = coerceFloatUn $ AppF Atn
-  sinh  = coerceFloatUn $ AppF Snh
-  cosh  = coerceFloatUn $ AppF Csh
-  asinh = coerceFloatUn $ AppF Ash
-  acosh = coerceFloatUn $ AppF Ach
-  atanh = coerceFloatUn $ AppF Ath
-
-type instance Base (NumExpr   a) = ExprF a
-type instance Base (IntExpr   a) = ExprF a
-type instance Base (FracExpr  a) = ExprF a
-type instance Base (FloatExpr a) = ExprF a
-
-cproject :: Coercible (Expr a) (e a) => e a -> ExprF a (e a)
-cproject = crce project where
-  crce :: Coercible (Expr a) (e a) => (Expr a -> ExprF a (Expr a)) -> e a -> ExprF a (e a)
-  crce = coerce
-
-instance Recursive (NumExpr   a) where project = cproject
-instance Recursive (IntExpr   a) where project = cproject
-instance Recursive (FracExpr  a) where project = cproject
-instance Recursive (FloatExpr a) where project = cproject
-
-cembed :: Coercible (Expr a) (e a) => ExprF a (e a) -> e a
-cembed = crce embed where
-  crce :: Coercible (Expr a) (e a) => (ExprF a (Expr a) -> Expr a) -> ExprF a (e a) -> e a
-  crce = coerce
-
-instance Corecursive (NumExpr   a) where embed = cembed
-instance Corecursive (IntExpr   a) where embed = cembed
-instance Corecursive (FracExpr  a) where embed = cembed
-instance Corecursive (FloatExpr a) where embed = cembed
-
-platef :: (Corecursive f, Recursive f, Traversable (Base f), Applicative m)
-       => (f -> m f) -> f -> m f
-platef f = fmap embed . traverse f . project
-
-instance Plated (NumExpr   a) where plate = platef
-instance Plated (IntExpr   a) where plate = platef
-instance Plated (FracExpr  a) where plate = platef
-instance Plated (FloatExpr a) where plate = platef
-instance Traversable f => Plated (Fix f) where plate = platef
+-- | A monadic catamorphism.
+cataM
+  :: (Recursive t, Traversable (Base t), Monad m)
+  => (Base t a -> m a) -- ^ a monadic (Base t)-algebra
+  -> t                 -- ^ fixed point
+  -> m a               -- ^ result
+cataM f = c where c = f <=< (traverse c . project)
 
 -- | A monadic anamorphism
 anaM
@@ -386,25 +314,7 @@ fracArb r = [ DivF r r ]
 floatArb :: Floating a => r -> [Gen (ExprF a r)]
 floatArb r = [ flip AppF r <$> arbitrary ]
 
-instance (Arbitrary a, Num a) => Arbitrary (NumExpr a) where
-  arbitrary = sized (anaM alg) where
-    alg 0 = litArb
-    alg n = oneof $ litArb : fmap pure (numArb r) where
-      r = n `div` 2
-
-instance (Arbitrary a, Integral a) => Arbitrary (IntExpr a) where
-  arbitrary = sized (anaM alg) where
-    alg 0 = litArb
-    alg n = oneof $ litArb : fmap pure (numArb r ++ intArb r) where
-      r = n `div` 2
-
-instance (Arbitrary a, Fractional a) => Arbitrary (FracExpr a) where
-  arbitrary = sized (anaM alg) where
-    alg 0 = litArb
-    alg n = oneof $ litArb : fmap pure (numArb r ++ fracArb r) where
-      r = n `div` 2
-
-instance (Arbitrary a, Floating a) => Arbitrary (FloatExpr a) where
+instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
   arbitrary = sized (anaM alg) where
     alg 0 = litArb
     alg n = oneof $ litArb : floatArb r ++ fmap pure (numArb r ++ fracArb r) where
@@ -423,57 +333,94 @@ putAlg = \case
   MulF x y -> putWord8 8 *> x *> y
   AddF x y -> putWord8 9 *> x *> y
 
-instance (Num a, Serialize a) => Serialize (NumExpr a) where
+instance (Floating a, Serialize a) => Serialize (Expr a) where
   put = cata putAlg
-  get = anaM (const $ alg =<< getWord8) () where
+  get = alg =<< getWord8 where
     alg = \case
-      0 -> LitF <$> get
-      1 -> pure $ AbsF ()
-      2 -> pure $ SigF ()
-      6 -> pure $ NegF ()
-      8 -> pure $ MulF () ()
-      9 -> pure $ AddF () ()
+      0 -> Lit   <$> get
+      1 -> Abs   <$> get
+      2 -> Sig   <$> get
+      5 -> (:$:) <$> get <*> get
+      6 -> Neg   <$> get
+      7 -> (:/:) <$> get <*> get
+      8 -> (:*:) <$> get <*> get
+      9 -> (:+:) <$> get <*> get
+      _ -> error "corrupted binary"
+
+-- newtype wrappers for subsets of Expr , similar to QuickCheck's Positive / Small, etc
+newtype NumExpr a =
+  NumExpr { getNumExpr :: Expr a
+          } deriving (Eq, Ord, Show)
+
+newtype IntExpr a =
+  IntExpr { getIntExpr :: Expr a
+          } deriving (Eq, Ord, Show)
+
+newtype FracExpr a =
+  FracExpr { getFracExpr :: Expr a
+           } deriving (Eq, Ord, Show)
+
+instance (Num a, Arbitrary a) => Arbitrary (NumExpr a) where
+  arbitrary = NumExpr <$> sized (anaM alg) where
+    alg 0 = litArb
+    alg n = oneof $ litArb : fmap pure (numArb r) where
+      r = n `div` 2
+
+instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
+  arbitrary = IntExpr <$> sized (anaM alg) where
+    alg 0 = litArb
+    alg n = oneof $ litArb : fmap pure (numArb r ++ intArb r) where
+      r = n `div` 2
+
+instance (Fractional a, Arbitrary a) => Arbitrary (FracExpr a) where
+  arbitrary = FracExpr <$> sized (anaM alg) where
+    alg 0 = litArb
+    alg n = oneof $ litArb : fmap pure (numArb r ++ fracArb r) where
+      r = n `div` 2
+
+instance (Num a, Serialize a) => Serialize (NumExpr a) where
+  put = cata putAlg . getNumExpr
+  get = getn where
+    getn = coerce (alg =<< getWord8)
+    gete = (coerce :: Get (NumExpr a) -> Get (Expr a)) getn
+    alg = \case
+      0 -> Lit   <$> get
+      1 -> Abs   <$> gete
+      2 -> Sig   <$> gete
+      6 -> Neg   <$> gete
+      8 -> (:*:) <$> gete <*> gete
+      9 -> (:+:) <$> gete <*> gete
       _ -> error "corrupted binary"
 
 instance (Integral a, Serialize a) => Serialize (IntExpr a) where
-  put = cata putAlg
-  get = anaM (const $ alg =<< getWord8) () where
+  put = cata putAlg . getIntExpr
+  get = getn where
+    getn = coerce (alg =<< getWord8)
+    gete = (coerce :: Get (IntExpr a) -> Get (Expr a)) getn
     alg = \case
-      0 -> LitF <$> get
-      1 -> pure $ AbsF ()
-      2 -> pure $ SigF ()
-      3 -> pure $ QutF () ()
-      4 -> pure $ RemF () ()
-      6 -> pure $ NegF ()
-      8 -> pure $ MulF () ()
-      9 -> pure $ AddF () ()
+      0 -> Lit    <$> get
+      1 -> Abs    <$> gete
+      2 -> Sig    <$> gete
+      3 -> (://:) <$> gete <*> gete
+      4 -> (:%:)  <$> gete <*> gete
+      6 -> Neg    <$> gete
+      8 -> (:*:)  <$> gete <*> gete
+      9 -> (:+:)  <$> gete <*> gete
       _ -> error "corrupted binary"
 
 instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
-  put = cata putAlg
-  get = anaM (const $ alg =<< getWord8) () where
+  put = cata putAlg . getFracExpr
+  get = getn where
+    getn = coerce (alg =<< getWord8)
+    gete = (coerce :: Get (FracExpr a) -> Get (Expr a)) getn
     alg = \case
-      0 -> LitF <$> get
-      1 -> pure $ AbsF ()
-      2 -> pure $ SigF ()
-      6 -> pure $ NegF ()
-      7 -> pure $ DivF () ()
-      8 -> pure $ MulF () ()
-      9 -> pure $ AddF () ()
-      _ -> error "corrupted binary"
-
-instance (Floating a, Serialize a) => Serialize (FloatExpr a) where
-  put = cata putAlg
-  get = anaM (const $ alg =<< getWord8) () where
-    alg = \case
-      0 -> LitF <$> get
-      1 -> pure $ AbsF ()
-      2 -> pure $ SigF ()
-      5 -> AppF <$> get ?? ()
-      6 -> pure $ NegF ()
-      7 -> pure $ DivF () ()
-      8 -> pure $ MulF () ()
-      9 -> pure $ AddF () ()
+      0 -> Lit   <$> get
+      1 -> Abs   <$> gete
+      2 -> Sig   <$> gete
+      6 -> Neg   <$> gete
+      7 -> (:/:) <$> gete <*> gete
+      8 -> (:*:) <$> gete <*> gete
+      9 -> (:+:) <$> gete <*> gete
       _ -> error "corrupted binary"
 
 pprAlg :: Show a => ExprF a (Int, ShowS) -> ShowS
@@ -492,38 +439,29 @@ pprAlg e = case e of
     parL (c,p) = showParen (prec e >  c) p
     parR (c,p) = showParen (prec e >= c) p
 
-instance Show a => Show (NumExpr   a) where showsPrec _ = zygo prec pprAlg
-instance Show a => Show (IntExpr   a) where showsPrec _ = zygo prec pprAlg
-instance Show a => Show (FracExpr  a) where showsPrec _ = zygo prec pprAlg
-instance Show a => Show (FloatExpr a) where showsPrec _ = zygo prec pprAlg
+instance Show a => Show (Expr a) where showsPrec _ = zygo prec pprAlg
 
-pattern x :+: y = Fix (AddF x y)
-pattern x :*: y = Fix (MulF x y)
-pattern x :/: y = Fix (DivF x y)
-pattern x :%: y = Fix (RemF x y)
-pattern x :$: y = Fix (AppF x y)
+pattern x :+: y = Expr (AddF x y)
+pattern x :*: y = Expr (MulF x y)
+pattern x :/: y = Expr (DivF x y)
+pattern x :%: y = Expr (RemF x y)
+pattern x :$: y = Expr (AppF x y)
 pattern x :-: y = x :+: Neg y
 pattern x :^: y = Exp :$: ((Log :$: x) :*: y)
-pattern x ://: y = Fix (QutF x y)
-pattern Neg x    = Fix (NegF x)
-pattern Abs x    = Fix (AbsF x)
-pattern Lit a    = Fix (LitF a)
+pattern x ://: y = Expr (QutF x y)
+pattern Neg x = Expr (NegF x)
+pattern Sig x = Expr (SigF x)
+pattern Abs x = Expr (AbsF x)
+pattern Lit a = Expr (LitF a)
 
-class ExprType e where exprIso :: Iso' (Expr a) (e a)
-
-instance ExprType NumExpr   where exprIso = coerced
-instance ExprType IntExpr   where exprIso = coerced
-instance ExprType FracExpr  where exprIso = coerced
-instance ExprType FloatExpr where exprIso = coerced
-
-assoc :: ExprType e => e a -> e a
-assoc = under exprIso . rewrite $ \case
+assoc :: Expr a -> Expr a
+assoc = rewrite $ \case
     x :+: (y :+: z) -> Just $ (x :+: y) :+: z
     x :*: (y :*: z) -> Just $ (x :*: y) :*: z
     _ -> Nothing
 
-simplify :: (Num a, Eq a, ExprType e) => e a -> e a
-simplify = under exprIso . rewrite $ \case
+simplify :: (Num a, Eq a) => Expr a -> Expr a
+simplify = rewrite $ \case
   x :+: Lit 0 -> Just x
   Lit 0 :+: x -> Just x
   x :/: Lit 1 -> Just x

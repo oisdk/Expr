@@ -2,122 +2,103 @@
 ./Setup.hs,15
 main main1,2
 
-./src/Expr.hs,2884
-data ExprF ExprF41,42
-  LitF LitF42,43
-  AddF AddF45,46
-  MulF MulF46,47
-  AbsF AbsF47,48
-  SigF SigF48,49
-  NegF NegF49,50
-  QutF QutF52,53
-  RemF RemF53,54
-  DivF DivF56,57
-  AppF AppF59,60
-type Expr Expr61,62
-type Expr a a61,62
-data Func Func63,64
-    Sin Sin64,65
-    Sin | Cos Cos64,65
-    Sin | Cos | Exp Exp64,65
-    Sin | Cos | Exp | Log Log64,65
-    Sin | Cos | Exp | Log | Tan Tan64,65
-    Sin | Cos | Exp | Log | Tan | Atn Atn64,65
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn64,65
-  | Acs Acs65,66
-  | Acs | Snh Snh65,66
-  | Acs | Snh | Csh Csh65,66
-  | Acs | Snh | Csh | Tnh Tnh65,66
-  | Acs | Snh | Csh | Tnh | Ach Ach65,66
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash65,66
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth65,66
-instance instance68,69
-prec prec144,145
-prec prec145,146
-zipExpr zipExpr157,158
-zipExpr zipExpr165,166
-evalAlg evalAlg178,179
-evalAlg evalAlg179,180
-appF appF191,192
-appF appF192,193
-newtype NumExpr NumExpr208,209
-  NumExpr NumExpr209,210
-  NumExpr { _getNumExpr _getNumExpr209,210
-coerceNumBi coerceNumBi212,213
-coerceNumBi coerceNumBi214,215
-coerceNumUn coerceNumUn216,217
-coerceNumUn coerceNumUn217,218
-newtype IntExpr IntExpr227,228
-  IntExpr IntExpr228,229
-  IntExpr { _getIntExpr _getIntExpr228,229
-coerceIntBi coerceIntBi231,232
-coerceIntBi coerceIntBi233,234
-coerceIntUn coerceIntUn235,236
-coerceIntUn coerceIntUn236,237
-newtype FracExpr FracExpr262,263
-  FracExpr FracExpr263,264
-  FracExpr { _getFracExpr _getFracExpr263,264
-coerceFracBi coerceFracBi266,267
-coerceFracBi coerceFracBi268,269
-coerceFracUn coerceFracUn270,271
-coerceFracUn coerceFracUn271,272
-newtype FloatExpr FloatExpr285,286
-  FloatExpr FloatExpr286,287
-  FloatExpr { _getFloatExpr _getFloatExpr286,287
-coerceFloatBi coerceFloatBi289,290
-coerceFloatBi coerceFloatBi291,292
-coerceFloatUn coerceFloatUn293,294
-coerceFloatUn coerceFloatUn294,295
-type instance instance323,324
-type instance Base Base323,324
-type instance instance324,325
-type instance instance325,326
-type instance instance326,327
-cproject cproject328,329
-cproject cproject329,330
-cembed cembed338,339
-cembed cembed339,340
-platef platef348,349
-platef platef350,351
-anaM anaM364,365
-litArb litArb366,367
-litArb litArb367,368
-numArb numArb369,370
-numArb numArb370,371
-intArb intArb377,378
-intArb intArb378,379
-fracArb fracArb382,383
-fracArb fracArb383,384
-floatArb floatArb385,386
-floatArb floatArb386,387
-putAlg putAlg412,413
-putAlg putAlg413,414
-pprAlg pprAlg478,479
-pprAlg pprAlg479,480
-pattern pattern499,500
-class ExprType ExprType511,512
-class ExprType ExprType511,512
-class ExprType e where exprIso exprIso511,512
-assoc assoc518,519
-assoc assoc519,520
-simplify simplify524,525
-simplify simplify525,526
+./src/Expr.hs,2179
+data ExprF ExprF43,44
+  LitF LitF44,45
+  AddF AddF47,48
+  MulF MulF48,49
+  AbsF AbsF49,50
+  SigF SigF50,51
+  NegF NegF51,52
+  QutF QutF54,55
+  RemF RemF55,56
+  DivF DivF58,59
+  AppF AppF61,62
+data Func Func65,66
+    Sin Sin66,67
+    Sin | Cos Cos66,67
+    Sin | Cos | Exp Exp66,67
+    Sin | Cos | Exp | Log Log66,67
+    Sin | Cos | Exp | Log | Tan Tan66,67
+    Sin | Cos | Exp | Log | Tan | Atn Atn66,67
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn66,67
+  | Acs Acs67,68
+  | Acs | Snh Snh67,68
+  | Acs | Snh | Csh Csh67,68
+  | Acs | Snh | Csh | Tnh Tnh67,68
+  | Acs | Snh | Csh | Tnh | Ach Ach67,68
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash67,68
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth67,68
+instance instance70,71
+prec prec146,147
+prec prec147,148
+zipExpr zipExpr159,160
+zipExpr zipExpr167,168
+appF appF180,181
+appF appF181,182
+newtype Expr Expr197,198
+  Expr Expr198,199
+  Expr { _getExpr _getExpr198,199
+coerceBi coerceBi201,202
+coerceBi coerceBi203,204
+coerceUn coerceUn205,206
+coerceUn coerceUn206,207
+type instance instance248,249
+type instance Base Base248,249
+evalAlg evalAlg254,255
+evalAlg evalAlg255,256
+eval eval267,268
+eval eval268,269
+safeEvalAlg safeEvalAlg270,271
+safeEvalAlg safeEvalAlg271,272
+safeEval safeEval275,276
+safeEval safeEval276,277
+cataM cataM284,285
+anaM anaM292,293
+litArb litArb294,295
+litArb litArb295,296
+numArb numArb297,298
+numArb numArb298,299
+intArb intArb305,306
+intArb intArb306,307
+fracArb fracArb310,311
+fracArb fracArb311,312
+floatArb floatArb313,314
+floatArb floatArb314,315
+putAlg putAlg322,323
+putAlg putAlg323,324
+newtype NumExpr NumExpr350,351
+  NumExpr NumExpr351,352
+  NumExpr { getNumExpr getNumExpr351,352
+newtype IntExpr IntExpr354,355
+  IntExpr IntExpr355,356
+  IntExpr { getIntExpr getIntExpr355,356
+newtype FracExpr FracExpr358,359
+  FracExpr FracExpr359,360
+  FracExpr { getFracExpr getFracExpr359,360
+pprAlg pprAlg425,426
+pprAlg pprAlg426,427
+pattern pattern443,444
+assoc assoc456,457
+assoc assoc457,458
+simplify simplify462,463
+simplify simplify463,464
 
-./test/expr-tests.hs,490
+./test/expr-tests.hs,598
 module Main Main2,3
-prop_Serialize prop_Serialize14,15
-prop_Serialize prop_Serialize15,16
-sameResult sameResult17,18
-sameResult sameResult18,19
-sameResult2 sameResult220,21
-sameResult2 sameResult221,22
-isId isId23,24
-isId isId24,25
-checkSerialize checkSerialize26,27
-checkSerialize checkSerialize27,28
+prop_Serialize prop_Serialize12,13
+prop_Serialize prop_Serialize13,14
+prop_SerializeNum prop_SerializeNum15,16
+prop_SerializeNum prop_SerializeNum16,17
+prop_SerializeInt prop_SerializeInt18,19
+prop_SerializeInt prop_SerializeInt19,20
+prop_SerializeFrac prop_SerializeFrac21,22
+prop_SerializeFrac prop_SerializeFrac22,23
+checkSerialize checkSerialize24,25
+checkSerialize checkSerialize25,26
+quickCheckExit quickCheckExit28,29
 quickCheckExit quickCheckExit29,30
-quickCheckExit quickCheckExit30,31
+failWith failWith33,34
 failWith failWith34,35
-failWith failWith35,36
-runTests runTests38,39
-main main40,41
+runTests runTests37,38
+main main39,40

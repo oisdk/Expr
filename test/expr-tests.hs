@@ -2,30 +2,29 @@
 
 module Main where
 
-import           Control.Applicative
 import           Control.Monad
 import           Data.Functor
-import           Data.Ord
 import           Data.Serialize           (Serialize, decode, encode)
 import           Expr
 import           System.Exit
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Property as P
 
-prop_Serialize :: NumExpr Int -> P.Result
+prop_Serialize :: Expr Double -> P.Result
 prop_Serialize = checkSerialize
 
-sameResult :: Eq a => (b -> a) -> (b -> a) -> b -> Bool
-sameResult = liftA2 (==)
+prop_SerializeNum :: NumExpr Integer -> P.Result
+prop_SerializeNum = checkSerialize
 
-sameResult2 :: Eq a => (c -> b -> a) -> (c -> b -> a) -> c -> b -> Bool
-sameResult2 = liftA2 sameResult
+prop_SerializeInt :: IntExpr Integer -> P.Result
+prop_SerializeInt = checkSerialize
 
-isId :: Eq a => (a -> a) -> a -> Bool
-isId = sameResult id
+prop_SerializeFrac :: FracExpr Rational -> P.Result
+prop_SerializeFrac = checkSerialize
 
 checkSerialize :: (Eq a, Serialize a) => a -> P.Result
-checkSerialize a = either failWith (\x -> if x == a then P.succeeded else P.failed) . decode . encode $ a
+checkSerialize a =
+  either failWith (\x -> if x == a then P.succeeded else P.failed) . decode . encode $ a
 
 quickCheckExit :: Testable prop => prop -> IO Result
 quickCheckExit = resultExit <=< quickCheckResult where
