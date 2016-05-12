@@ -3,17 +3,17 @@
 main main1,2
 
 ./src/Expr.hs,2179
-data ExprF ExprF43,44
-  LitF LitF44,45
-  AddF AddF47,48
-  MulF MulF48,49
-  AbsF AbsF49,50
-  SigF SigF50,51
-  NegF NegF51,52
-  QutF QutF54,55
-  RemF RemF55,56
-  DivF DivF58,59
-  AppF AppF61,62
+data ExprF ExprF45,46
+  LitF LitF46,47
+  AddF AddF49,50
+  MulF MulF50,51
+  AbsF AbsF51,52
+  SigF SigF52,53
+  NegF NegF53,54
+  QutF QutF56,57
+  RemF RemF57,58
+  DivF DivF60,61
+  AppF AppF63,64
 data Func Func65,66
     Sin Sin66,67
     Sin | Cos Cos66,67
@@ -30,59 +30,59 @@ data Func Func65,66
   | Acs | Snh | Csh | Tnh | Ach | Ash Ash67,68
   | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth67,68
 instance instance70,71
-prec prec146,147
 prec prec147,148
-zipExpr zipExpr159,160
-zipExpr zipExpr167,168
-appF appF180,181
+prec prec148,149
+zipExpr zipExpr160,161
+zipExpr zipExpr168,169
 appF appF181,182
-newtype Expr Expr197,198
-  Expr Expr198,199
-  Expr { _getExpr _getExpr198,199
-coerceBi coerceBi201,202
-coerceBi coerceBi203,204
-coerceUn coerceUn205,206
-coerceUn coerceUn206,207
-type instance instance248,249
-type instance Base Base248,249
-evalAlg evalAlg254,255
-evalAlg evalAlg255,256
-eval eval267,268
-eval eval268,269
-safeEvalAlg safeEvalAlg270,271
-safeEvalAlg safeEvalAlg271,272
-safeEval safeEval275,276
-safeEval safeEval276,277
-cataM cataM284,285
-anaM anaM292,293
-litArb litArb294,295
-litArb litArb295,296
-numArb numArb297,298
-numArb numArb298,299
-intArb intArb305,306
-intArb intArb306,307
-fracArb fracArb310,311
-fracArb fracArb311,312
-floatArb floatArb313,314
-floatArb floatArb314,315
-putAlg putAlg322,323
-putAlg putAlg323,324
-newtype NumExpr NumExpr350,351
-  NumExpr NumExpr351,352
-  NumExpr { getNumExpr getNumExpr351,352
-newtype IntExpr IntExpr354,355
-  IntExpr IntExpr355,356
-  IntExpr { getIntExpr getIntExpr355,356
-newtype FracExpr FracExpr358,359
-  FracExpr FracExpr359,360
-  FracExpr { getFracExpr getFracExpr359,360
-pprAlg pprAlg425,426
-pprAlg pprAlg426,427
-pattern pattern443,444
-assoc assoc456,457
-assoc assoc457,458
-simplify simplify462,463
-simplify simplify463,464
+appF appF182,183
+newtype Expr Expr200,201
+  Expr Expr201,202
+  Expr { _getExpr _getExpr201,202
+coerceBi coerceBi204,205
+coerceBi coerceBi206,207
+coerceUn coerceUn208,209
+coerceUn coerceUn209,210
+type instance instance251,252
+type instance Base Base251,252
+evalAlg evalAlg257,258
+evalAlg evalAlg258,259
+eval eval270,271
+eval eval271,272
+safeEvalAlg safeEvalAlg273,274
+safeEvalAlg safeEvalAlg274,275
+safeEval safeEval279,280
+safeEval safeEval280,281
+cataM cataM288,289
+anaM anaM296,297
+litArb litArb298,299
+litArb litArb299,300
+numArb numArb301,302
+numArb numArb302,303
+intArb intArb309,310
+intArb intArb310,311
+fracArb fracArb314,315
+fracArb fracArb315,316
+floatArb floatArb317,318
+floatArb floatArb318,319
+putAlg putAlg331,332
+putAlg putAlg332,333
+newtype NumExpr NumExpr371,372
+  NumExpr NumExpr372,373
+  NumExpr { getNumExpr getNumExpr372,373
+newtype IntExpr IntExpr378,379
+  IntExpr IntExpr379,380
+  IntExpr { getIntExpr getIntExpr379,380
+newtype FracExpr FracExpr385,386
+  FracExpr FracExpr386,387
+  FracExpr { getFracExpr getFracExpr386,387
+pprAlg pprAlg452,453
+pprAlg pprAlg453,454
+pattern pattern470,471
+assoc assoc484,485
+assoc assoc485,486
+simplify simplify491,492
+simplify simplify492,493
 
 ./test/expr-tests.hs,598
 module Main Main2,3

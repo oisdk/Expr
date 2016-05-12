@@ -41,6 +41,8 @@ import           Data.Serialize
 import           GHC.Generics          (Generic)
 import           Test.QuickCheck
 
+-- | An unfixed expression type, which supports most of Haskell's
+-- standard numeric operations, restricting its inputs accordingly.
 data ExprF a r where
   LitF :: a -> ExprF a r
 
@@ -60,8 +62,6 @@ data ExprF a r where
 
   -- Floating:
   AppF :: Floating a => Func -> r -> ExprF a r
-
--- type Fix (ExprF a) = Fix (ExprF a)
 
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
@@ -88,6 +88,7 @@ instance Show Func where
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
 instance Serialize Func
 
+-- Have to do all of these by hand, no deriving for GADTs
 instance Functor (ExprF a) where
   fmap f = \case
     LitF a   -> LitF a
@@ -150,12 +151,12 @@ prec = \case
     AbsF _   -> 8
     SigF _   -> 7
     AppF _ _ -> 6
-    NegF _   -> 5
-    QutF _ _ -> 4
-    RemF _ _ -> 3
-    DivF _ _ -> 2
-    MulF _ _ -> 1
-    AddF _ _ -> 0
+    QutF _ _ -> 5
+    RemF _ _ -> 4
+    DivF _ _ -> 3
+    MulF _ _ -> 2
+    AddF _ _ -> 1
+    NegF _   -> 0
 
 zipExpr :: (ExprF a r -> ExprF a r -> b)
         -> (a -> a -> b)
@@ -195,6 +196,8 @@ appF = \case
   Ash -> asinh
   Ath -> atanh
 
+-- | A fixed expression type, which can conform to the numeric
+-- typeclasses depending on what constant type it wraps.
 newtype Expr a =
   Expr { _getExpr :: ExprF a (Expr a)
        } deriving (Eq, Ord)
@@ -249,8 +252,8 @@ instance Floating a => Floating (Expr a) where
 type instance Base (Expr a) = ExprF a
 instance Recursive (Expr a) where project = coerce
 instance Corecursive (Expr a) where embed = coerce
-
-instance Plated (Expr a) where plate f = fmap embed . traverse f . project
+instance Plated (Expr a) where
+  plate f = fmap embed . traverse f . project
 
 evalAlg :: ExprF a a -> a
 evalAlg = \case
@@ -273,6 +276,7 @@ safeEvalAlg = \case
   DivF _ 0 -> Left "tried to divide by zero"
   e -> Right (evalAlg e)
 
+-- | Evaluate an expression, catching zero-division errors.
 safeEval :: Eq a => Expr a -> Either String a
 safeEval = cataM safeEvalAlg
 
@@ -317,8 +321,13 @@ floatArb r = [ flip AppF r <$> arbitrary ]
 instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
   arbitrary = sized (anaM alg) where
     alg 0 = litArb
-    alg n = oneof $ litArb : floatArb r ++ fmap pure (numArb r ++ fracArb r) where
-      r = n `div` 2
+    alg n = oneof $
+      litArb :
+      floatArb r ++ fmap pure (
+      numArb r ++
+      fracArb r
+      ) where
+        r = n `div` 2
 
 putAlg :: Serialize a => ExprF a (PutM ()) -> PutM ()
 putAlg = \case
@@ -347,15 +356,33 @@ instance (Floating a, Serialize a) => Serialize (Expr a) where
       9 -> (:+:) <$> get <*> get
       _ -> error "corrupted binary"
 
--- newtype wrappers for subsets of Expr , similar to QuickCheck's Positive / Small, etc
+-- newtype wrappers for subsets of Expr , similar to QuickCheck's
+-- Positive / Small, etc
+
+-- | A subset of Expr, which only supports the operations of the Num
+-- typeclass. Has different Arbitrary and Serialize instances to
+-- Expr. For instance, to generate expressions with only the Num
+-- typeclass operations, you might do this:
+--
+-- > sample $ do
+-- >   NumExpr e <- arbitrary
+-- >   pure e
+--
+
 newtype NumExpr a =
   NumExpr { getNumExpr :: Expr a
           } deriving (Eq, Ord, Show)
 
+-- | A subset of Expr, which only supports the operations of the
+-- Integral typeclass. Has different Arbitrary and Serialize
+-- instances to Expr.
 newtype IntExpr a =
   IntExpr { getIntExpr :: Expr a
           } deriving (Eq, Ord, Show)
 
+-- | A subset of Expr, which only supports the operations of the
+-- Fractional typeclass. Has different Arbitrary and Serialize
+-- instances to Expr.
 newtype FracExpr a =
   FracExpr { getFracExpr :: Expr a
            } deriving (Eq, Ord, Show)
@@ -454,12 +481,14 @@ pattern Sig x = Expr (SigF x)
 pattern Abs x = Expr (AbsF x)
 pattern Lit a = Expr (LitF a)
 
+-- | Normalizes associative operators
 assoc :: Expr a -> Expr a
 assoc = rewrite $ \case
     x :+: (y :+: z) -> Just $ (x :+: y) :+: z
     x :*: (y :*: z) -> Just $ (x :*: y) :*: z
     _ -> Nothing
 
+-- | Very basic simplification
 simplify :: (Num a, Eq a) => Expr a -> Expr a
 simplify = rewrite $ \case
   x :+: Lit 0 -> Just x
