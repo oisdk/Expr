@@ -42,7 +42,7 @@ import           Data.Ord
 import           Data.Serialize
 import           GHC.Generics          (Generic)
 import           Test.QuickCheck
-
+import Data.Functor.Foldable.Extras
 -- | An unfixed expression type, which supports most of Haskell's
 -- standard numeric operations, restricting its inputs accordingly.
 data ExprF a r where
@@ -295,22 +295,6 @@ safeEvalAlg = \case
 safeEval :: Eq a => Expr a -> Either String a
 safeEval = cataM safeEvalAlg
 
--- | A monadic catamorphism.
-cataM
-  :: (Recursive t, Traversable (Base t), Monad m)
-  => (Base t a -> m a) -- ^ a monadic (Base t)-algebra
-  -> t                 -- ^ fixed point
-  -> m a               -- ^ result
-cataM f = c where c = f <=< (traverse c . project)
-
--- | A monadic anamorphism
-anaM
-  :: (Corecursive t, Traversable (Base t), Monad m)
-  => (a -> m (Base t a))        -- ^ a monadic (Base t)-coalgebra
-  -> a                          -- ^ seed
-  -> m t
-anaM g = a where a = fmap embed . traverse a <=< g
-
 litArb :: (Num a, Arbitrary a) => Gen (ExprF a r)
 litArb = LitF . abs <$> arbitrary
 
@@ -539,11 +523,6 @@ simplify = rewrite $ \case
   x :%:  y | x == y -> Just $ Lit 0
   x ://: y | x == y -> Just $ Lit 1
   _ -> Nothing
-
-zipo :: (Recursive f, Recursive g)
-     => (Base f (g -> a) -> Base g g -> a)
-     -> f -> g -> a
-zipo alg = cata zalg where zalg x = alg x . project
 
 approxEqual :: (a -> a -> Bool) -> Expr a -> Expr a -> Bool
 approxEqual eq = zipo alg `on` assoc where

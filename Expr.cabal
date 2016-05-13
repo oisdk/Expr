@@ -21,6 +21,7 @@ library
                      , QuickCheck
                      , lens
                      , recursion-schemes >= 5
+                     , recursion-schemes-extras
   ghc-options:         -Wall
   default-language:    Haskell2010
 

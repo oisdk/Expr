@@ -3,6 +3,9 @@ packages:
 - location:
     git: https://github.com/ekmett/recursion-schemes.git
     commit: cf42f2ace35ca09a8ab489538e9493f8333bc0ec
+- location:
+    git: https://github.com/oisdk/recursion-schemes-extras.git
+    commit: 77e71899ad45ff1384b2d2ca986b635a992376ba
 extra-deps:
 - recursion-schemes-5
 resolver: lts-5.16
