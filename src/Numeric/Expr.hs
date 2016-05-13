@@ -28,6 +28,7 @@ module Numeric.Expr
   , simplify
   , eval
   , safeEval
+  , approxEqual
   ) where
 
 import           Control.Lens
@@ -36,6 +37,7 @@ import           Data.Coerce
 import           Data.Functor.Foldable
 import           Data.Monoid
 import           Data.Ord
+import Data.Function
 import           Data.Serialize
 import           GHC.Generics          (Generic)
 import           Test.QuickCheck
@@ -519,3 +521,22 @@ simplify = rewrite $ \case
   x :%:  y | x == y -> Just $ Lit 0
   x ://: y | x == y -> Just $ Lit 1
   _ -> Nothing
+
+zipo :: (Recursive f, Recursive g)
+     => (Base f (g -> a) -> Base g g -> a)
+     -> f -> g -> a
+zipo alg = cata zalg where zalg x = alg x . project
+
+approxEqual :: (a -> a -> Bool) -> Expr a -> Expr a -> Bool
+approxEqual eq = zipo alg `on` assoc where
+  alg (LitF a  ) (LitF b  ) = eq a b
+  alg (AddF w x) (AddF y z) = w y && x z
+  alg (MulF w x) (MulF y z) = w y && x z
+  alg (AbsF x  ) (AbsF y  ) = x y
+  alg (SigF x  ) (SigF y  ) = x y
+  alg (NegF x  ) (NegF y  ) = x y
+  alg (QutF w x) (QutF y z) = w y && x z
+  alg (RemF w x) (RemF y z) = w y && x z
+  alg (DivF w x) (DivF y z) = w y && x z
+  alg (AppF w x) (AppF y z) = w == y && x z
+  alg _ _ = False
