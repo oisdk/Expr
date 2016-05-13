@@ -32,7 +32,7 @@ module Numeric.Expr
   , showBracks
   ) where
 
-import           Control.Lens
+import           Control.Lens hiding (para)
 import           Control.Monad
 import           Data.Coerce
 import           Data.Function
@@ -464,23 +464,26 @@ instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
       9 -> (:+:) <$> gete <*> gete
       _ -> error "corrupted binary"
 
-pprAlg :: Show a => ExprF a (Int, ShowS) -> ShowS
+pprAlg :: (Show b, Show a) => ExprF a (Expr b, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a   -> shows a
-  NegF (c,x) -> showString "-" . showParen (11>c) x
+  NegF (c,x) -> showString "-" . showParen (11 > (prec._getExpr) c) x
+  AddF x (Neg y, _) -> parL x . showString " - " . parR (y, shows y)
   AddF x y -> parL x . showString " + " . parL y
   DivF x y -> parL x . showString " / " . parR y
   MulF x y -> parL x . showString " * " . parL y
+  AppF Exp ((Log :$: x) :*: y, _) ->
+    parL (x, shows x) . showString " ^ " . parR (y, shows y)
   AppF f x -> shows f . showChar ' ' . parR x
   AbsF x   -> showString "abs " . parR x
   SigF x   -> showString "signum " . parR x
   QutF x y -> parL x . showString " // " . parR y
   RemF x y -> parL x . showString " % "  . parR y
   where
-    parL (c,p) = showParen (prec e >  c) p
-    parR (c,p) = showParen (prec e >= c) p
+    parL = uncurry $ showParen . (prec e > ) . prec . _getExpr
+    parR = uncurry $ showParen . (prec e >=) . prec . _getExpr
 
-instance Show a => Show (Expr a) where showsPrec _ = zygo prec pprAlg
+instance Show a => Show (Expr a) where showsPrec _ = para pprAlg
 
 showBracks :: Show a => Expr a -> String
 showBracks = cata $ \case
@@ -495,8 +498,6 @@ showBracks = cata $ \case
   QutF x y -> concat [p x, " // ", p y]
   RemF x y -> concat [p x, " % ", p y]
   where p s = concat ["(", s, ")"]
-
-
 
 pattern x :+: y = Expr (AddF x y)
 pattern x :*: y = Expr (MulF x y)
