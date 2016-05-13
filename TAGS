@@ -2,94 +2,96 @@
 ./Setup.hs,15
 main main1,2
 
-./src/Numeric/Expr.hs,2362
+./src/Numeric/Expr.hs,2424
 module Numeric.ExprNumeric.Expr8,9
-data ExprF ExprF46,47
-  LitF LitF47,48
-  AddF AddF50,51
-  MulF MulF51,52
-  AbsF AbsF52,53
-  SigF SigF53,54
-  NegF NegF54,55
-  QutF QutF57,58
-  RemF RemF58,59
-  DivF DivF61,62
-  AppF AppF64,65
-data Func Func66,67
-    Sin Sin67,68
-    Sin | Cos Cos67,68
-    Sin | Cos | Exp Exp67,68
-    Sin | Cos | Exp | Log Log67,68
-    Sin | Cos | Exp | Log | Tan Tan67,68
-    Sin | Cos | Exp | Log | Tan | Atn Atn67,68
-    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn67,68
-  | Acs Acs68,69
-  | Acs | Snh Snh68,69
-  | Acs | Snh | Csh Csh68,69
-  | Acs | Snh | Csh | Tnh Tnh68,69
-  | Acs | Snh | Csh | Tnh | Ach Ach68,69
-  | Acs | Snh | Csh | Tnh | Ach | Ash Ash68,69
-  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth68,69
-instance instance71,72
-prec prec148,149
+data ExprF ExprF47,48
+  LitF LitF48,49
+  AddF AddF51,52
+  MulF MulF52,53
+  AbsF AbsF53,54
+  SigF SigF54,55
+  NegF NegF55,56
+  QutF QutF58,59
+  RemF RemF59,60
+  DivF DivF62,63
+  AppF AppF65,66
+data Func Func67,68
+    Sin Sin68,69
+    Sin | Cos Cos68,69
+    Sin | Cos | Exp Exp68,69
+    Sin | Cos | Exp | Log Log68,69
+    Sin | Cos | Exp | Log | Tan Tan68,69
+    Sin | Cos | Exp | Log | Tan | Atn Atn68,69
+    Sin | Cos | Exp | Log | Tan | Atn | AsnAsn68,69
+  | Acs Acs69,70
+  | Acs | Snh Snh69,70
+  | Acs | Snh | Csh Csh69,70
+  | Acs | Snh | Csh | Tnh Tnh69,70
+  | Acs | Snh | Csh | Tnh | Ach Ach69,70
+  | Acs | Snh | Csh | Tnh | Ach | Ash Ash69,70
+  | Acs | Snh | Csh | Tnh | Ach | Ash | AthAth69,70
+instance instance72,73
 prec prec149,150
-uprec uprec161,162
+prec prec150,151
 uprec uprec162,163
-zipExpr zipExpr174,175
-zipExpr zipExpr182,183
-appF appF195,196
+uprec uprec163,164
+zipExpr zipExpr175,176
+zipExpr zipExpr183,184
 appF appF196,197
-newtype Expr Expr214,215
-  Expr Expr215,216
-  Expr { _getExpr _getExpr215,216
-coerceBi coerceBi218,219
-coerceBi coerceBi220,221
-coerceUn coerceUn222,223
+appF appF197,198
+newtype Expr Expr215,216
+  Expr Expr216,217
+  Expr { _getExpr _getExpr216,217
+coerceBi coerceBi219,220
+coerceBi coerceBi221,222
 coerceUn coerceUn223,224
-type instance instance265,266
-type instance Base Base265,266
-evalAlg evalAlg271,272
+coerceUn coerceUn224,225
+type instance instance266,267
+type instance Base Base266,267
 evalAlg evalAlg272,273
-eval eval284,285
+evalAlg evalAlg273,274
 eval eval285,286
-safeEvalAlg safeEvalAlg287,288
+eval eval286,287
 safeEvalAlg safeEvalAlg288,289
-safeEval safeEval293,294
+safeEvalAlg safeEvalAlg289,290
 safeEval safeEval294,295
-cataM cataM302,303
-anaM anaM310,311
-litArb litArb312,313
+safeEval safeEval295,296
+cataM cataM303,304
+anaM anaM311,312
 litArb litArb313,314
-numArb numArb315,316
+litArb litArb314,315
 numArb numArb316,317
-intArb intArb323,324
+numArb numArb317,318
 intArb intArb324,325
-fracArb fracArb328,329
+intArb intArb325,326
 fracArb fracArb329,330
-floatArb floatArb331,332
+fracArb fracArb330,331
 floatArb floatArb332,333
-putAlg putAlg344,345
+floatArb floatArb333,334
 putAlg putAlg345,346
-newtype NumExpr NumExpr384,385
-  NumExpr NumExpr385,386
-  NumExpr { getNumExpr getNumExpr385,386
-newtype IntExpr IntExpr391,392
-  IntExpr IntExpr392,393
-  IntExpr { getIntExpr getIntExpr392,393
-newtype FracExpr FracExpr398,399
-  FracExpr FracExpr399,400
-  FracExpr { getFracExpr getFracExpr399,400
-pprAlg pprAlg465,466
+putAlg putAlg346,347
+newtype NumExpr NumExpr385,386
+  NumExpr NumExpr386,387
+  NumExpr { getNumExpr getNumExpr386,387
+newtype IntExpr IntExpr392,393
+  IntExpr IntExpr393,394
+  IntExpr { getIntExpr getIntExpr393,394
+newtype FracExpr FracExpr399,400
+  FracExpr FracExpr400,401
+  FracExpr { getFracExpr getFracExpr400,401
 pprAlg pprAlg466,467
-pattern pattern483,484
-assoc assoc497,498
-assoc assoc498,499
-simplify simplify504,505
-simplify simplify505,506
-zipo zipo524,525
-zipo zipo527,528
-approxEqual approxEqual529,530
-approxEqual approxEqual530,531
+pprAlg pprAlg467,468
+showBracks showBracks484,485
+showBracks showBracks485,486
+pattern pattern500,501
+assoc assoc514,515
+assoc assoc515,516
+simplify simplify521,522
+simplify simplify522,523
+zipo zipo541,542
+zipo zipo544,545
+approxEqual approxEqual546,547
+approxEqual approxEqual547,548
 
 ./test/expr-tests.hs,598
 module Main Main2,3

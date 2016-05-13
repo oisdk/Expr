@@ -29,15 +29,16 @@ module Numeric.Expr
   , eval
   , safeEval
   , approxEqual
+  , showBracks
   ) where
 
 import           Control.Lens
 import           Control.Monad
 import           Data.Coerce
+import           Data.Function
 import           Data.Functor.Foldable
 import           Data.Monoid
 import           Data.Ord
-import Data.Function
 import           Data.Serialize
 import           GHC.Generics          (Generic)
 import           Test.QuickCheck
@@ -480,6 +481,22 @@ pprAlg e = case e of
     parR (c,p) = showParen (prec e >= c) p
 
 instance Show a => Show (Expr a) where showsPrec _ = zygo prec pprAlg
+
+showBracks :: Show a => Expr a -> String
+showBracks = cata $ \case
+  LitF a   -> show a
+  NegF x   -> '-' : p x
+  AddF x y -> concat [p x, " + ", p y]
+  DivF x y -> concat [p x, " / ", p y]
+  MulF x y -> concat [p x, " * ", p y]
+  AppF f x -> concat [show f, " ", p x]
+  AbsF x   -> "abs " ++ p x
+  SigF x   -> "signum " ++ p x
+  QutF x y -> concat [p x, " // ", p y]
+  RemF x y -> concat [p x, " % ", p y]
+  where p s = concat ["(", s, ")"]
+
+
 
 pattern x :+: y = Expr (AddF x y)
 pattern x :*: y = Expr (MulF x y)
