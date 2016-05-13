@@ -5,7 +5,7 @@ module Main where
 import           Control.Monad
 import           Data.Functor
 import           Data.Serialize           (Serialize, decode, encode)
-import           Expr
+import           Numeric.Expr
 import           System.Exit
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Property as P

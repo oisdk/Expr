@@ -2,7 +2,8 @@
 ./Setup.hs,15
 main main1,2
 
-./src/Expr.hs,2221
+./src/Numeric/Expr.hs,2258
+module Numeric.ExprNumeric.Expr8,9
 data ExprF ExprF44,45
   LitF LitF45,46
   AddF AddF48,49

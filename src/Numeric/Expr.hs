@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeFamilies     #-}
 {-# LANGUAGE TypeOperators    #-}
 
-module Expr
+module Numeric.Expr
   ( ExprF(..)
   , Func(..)
   , Expr

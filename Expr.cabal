@@ -15,7 +15,7 @@ cabal-version:       >=1.10
 
 library
   hs-source-dirs:      src
-  exposed-modules:     Expr
+  exposed-modules:     Numeric.Expr
   build-depends:       base >= 4.7 && < 5
                      , cereal
                      , QuickCheck
