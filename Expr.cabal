@@ -22,6 +22,10 @@ library
                      , lens
                      , recursion-schemes >= 5
                      , recursion-schemes-extras
+                     , taggy
+                     , taggy-lens
+                     , unordered-containers
+                     , text
   ghc-options:         -Wall
   default-language:    Haskell2010
 

@@ -7,7 +7,8 @@ packages:
     git: https://github.com/oisdk/recursion-schemes-extras.git
     commit: 77e71899ad45ff1384b2d2ca986b635a992376ba
 extra-deps:
-- recursion-schemes-5
+- taggy-0.2.0
+- taggy-lens-0.1.2
 resolver: lts-5.16
 flags: {}
 extra-package-dbs: []

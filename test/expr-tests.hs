@@ -22,6 +22,12 @@ prop_SerializeInt = checkSerialize
 prop_SerializeFrac :: FracExpr Rational -> P.Result
 prop_SerializeFrac = checkSerialize
 
+prop_Eq :: Expr Double -> Bool
+prop_Eq e = e == e
+
+prop_Cmp :: Expr Double -> Bool
+prop_Cmp e = compare e e == EQ
+
 checkSerialize :: (Eq a, Serialize a) => a -> P.Result
 checkSerialize a =
   either failWith (\x -> if x == a then P.succeeded else P.failed) . decode . encode $ a
