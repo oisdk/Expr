@@ -16,7 +16,7 @@ module Numeric.Expr
   , NumExpr(..)
   , IntExpr(..)
   , FracExpr(..)
-  , VarExpr
+  , VarExpr(..)
   , pattern (:*:)
   , pattern (:+:)
   , pattern (:-:)
