@@ -25,6 +25,9 @@ prop_SerializeFrac = checkSerialize
 prop_Eq :: Expr Double -> Bool
 prop_Eq e = e == e
 
+prop_ApproxEq :: Expr Double -> Bool
+prop_ApproxEq e = approxEqual (==) e e
+
 prop_Cmp :: Expr Double -> Bool
 prop_Cmp e = compare e e == EQ
 

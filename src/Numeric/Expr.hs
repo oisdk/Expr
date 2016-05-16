@@ -564,6 +564,8 @@ approxEqual :: (a -> a -> Bool) -> Expr a -> Expr a -> Bool
 approxEqual eq = zipo alg `on` assoc where
   alg (LitF a  ) (LitF b  ) = eq a b
   alg (AddF w x) (AddF y z) = w y && x z
+  alg (SubF w x) (SubF y z) = w y && x z
+  alg (PowF w x) (PowF y z) = w y && x z
   alg (MulF w x) (MulF y z) = w y && x z
   alg (AbsF x  ) (AbsF y  ) = x y
   alg (SigF x  ) (SigF y  ) = x y
