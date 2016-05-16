@@ -1,13 +1,13 @@
+{-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE FlexibleContexts  #-}
 {-# LANGUAGE GADTs             #-}
 {-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE PatternSynonyms   #-}
 {-# LANGUAGE TypeFamilies      #-}
 {-# LANGUAGE TypeOperators     #-}
-{-# LANGUAGE OverloadedLists #-}
 
 module Numeric.Expr
   ( ExprF(..)
@@ -16,6 +16,7 @@ module Numeric.Expr
   , NumExpr(..)
   , IntExpr(..)
   , FracExpr(..)
+  , VarExpr
   , pattern (:*:)
   , pattern (:+:)
   , pattern (:-:)
@@ -44,11 +45,11 @@ import           Data.Functor.Foldable.Extras
 import           Data.Monoid
 import           Data.Ord
 import           Data.Serialize
+import           Data.String
 import           Data.Text                    (pack)
 import           GHC.Generics                 (Generic)
 import           Test.QuickCheck
 import           Text.Taggy.DOM
-import Data.String
 -- | An unfixed expression type, which supports most of Haskell's
 -- standard numeric operations, restricting its inputs accordingly.
 data ExprF a r where
