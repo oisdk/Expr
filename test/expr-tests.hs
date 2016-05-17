@@ -33,7 +33,9 @@ prop_Cmp e = compare e e == EQ
 
 checkSerialize :: (Eq a, Serialize a) => a -> P.Result
 checkSerialize a =
-  either failWith (\x -> if x == a then P.succeeded else P.failed) . decode . encode $ a
+  either failWith
+         (\x -> if x == a then P.succeeded else P.failed)
+  . decode . encode $ a
 
 quickCheckExit :: Testable prop => prop -> IO Result
 quickCheckExit = resultExit <=< quickCheckResult where
