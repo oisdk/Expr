@@ -1,18 +1,19 @@
 {-# LANGUAGE LambdaCase   #-}
 {-# LANGUAGE TypeFamilies #-}
 
-module Numeric.Expr.ExprType where
+module Numeric.Expr.ExprType
+  ( Expr(..)
+  ) where
 
-import           Control.Lens          (Plated, plate)
+import           Control.Lens                 (Plated, plate)
 import           Data.Coerce
 import           Data.Functor.Foldable
+import           Data.Functor.Foldable.Extras
 import           Data.Serialize
 import           Numeric.Expr.Algs
 import           Numeric.Expr.ExprF
 import           Numeric.Expr.Utils
 import           Test.QuickCheck
-import Data.Functor.Foldable.Extras
-
 
 -- | A fixed expression type, which can conform to the numeric
 -- typeclasses depending on what constant type it wraps.
@@ -97,7 +98,5 @@ instance (Floating a, Serialize a) => Serialize (Expr a) where
       10 -> SubF <$> get <*> get
       11 -> PowF <$> get <*> get
       _ -> error "corrupted binary"
-
-
 
 instance Show a => Show (Expr a) where showsPrec _ = zygo prec pprAlg

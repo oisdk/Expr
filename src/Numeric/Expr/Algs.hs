@@ -1,6 +1,16 @@
 {-# LANGUAGE LambdaCase #-}
 
-module Numeric.Expr.Algs where
+module Numeric.Expr.Algs
+  ( evalAlg
+  , litArb
+  , numArb
+  , fracArb
+  , intArb
+  , floatArb
+  , putAlg
+  , pprAlg
+  , prec
+  ) where
 
 import Test.QuickCheck
 import Data.Serialize

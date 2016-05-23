@@ -3,7 +3,11 @@
 {-# LANGUAGE DeriveFunctor #-}
 {-# LANGUAGE DeriveTraversable #-}
 
-module Numeric.Expr.VarExpr where
+module Numeric.Expr.VarExpr
+  ( VarExpr
+  , VarOr
+  , varExpr
+  ) where
 
 import Data.Functor.Foldable
 import Data.String
@@ -13,7 +17,7 @@ import Numeric.Expr.Algs
 import Numeric.Expr.Utils
 
 newtype VarExpr a = VarExpr
-  { getVarExpr :: VarOr a (VarExpr a)
+  { _getVarExpr :: VarOr a (VarExpr a)
   } deriving (Eq, Ord)
 
 data VarOr a r =
@@ -68,6 +72,5 @@ instance Floating a => Floating (VarExpr a) where
   acosh = wrapE .  AppF Ach
   atanh = wrapE .  AppF Ath
   (**)  = wrapE .: PowF
-
 
 instance IsString (VarExpr a) where fromString = VarExpr . Var

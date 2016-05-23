@@ -1,15 +1,17 @@
-{-# LANGUAGE LambdaCase #-}
-{-# LANGUAGE OverloadedLists #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
 
-module Numeric.Expr.MathML where
+module Numeric.Expr.MathML
+  ( MathML(..)
+  ) where
 
-import Text.Taggy.DOM
-import Numeric.Expr.ExprType
-import Numeric.Expr.ExprF
-import Data.Text (pack)
-import Data.Functor.Foldable
-import Numeric.Expr.VarExpr
+import           Data.Functor.Foldable
+import           Data.Text             (pack)
+import           Numeric.Expr.ExprF
+import           Numeric.Expr.ExprType
+import           Numeric.Expr.VarExpr
+import           Text.Taggy.DOM
 
 class MathML a where mlRep :: a -> Node
 
