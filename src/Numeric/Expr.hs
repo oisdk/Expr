@@ -1,15 +1,16 @@
-{-# LANGUAGE DeriveFunctor     #-}
-{-# LANGUAGE DeriveTraversable #-}
-{-# LANGUAGE DeriveFoldable    #-}
-{-# LANGUAGE DeriveGeneric     #-}
-{-# LANGUAGE FlexibleContexts  #-}
-{-# LANGUAGE GADTs             #-}
-{-# LANGUAGE LambdaCase        #-}
-{-# LANGUAGE OverloadedLists   #-}
-{-# LANGUAGE OverloadedStrings #-}
-{-# LANGUAGE PatternSynonyms   #-}
-{-# LANGUAGE TypeFamilies      #-}
-{-# LANGUAGE TypeOperators     #-}
+{-# LANGUAGE DeriveGeneric      #-}
+{-# LANGUAGE DeriveFunctor      #-}
+{-# LANGUAGE DeriveFoldable     #-}
+{-# LANGUAGE DeriveTraversable  #-}
+{-# LANGUAGE FlexibleContexts   #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE OverloadedLists    #-}
+{-# LANGUAGE OverloadedStrings  #-}
+{-# LANGUAGE PatternSynonyms    #-}
+{-# LANGUAGE TypeFamilies       #-}
+{-# LANGUAGE TypeOperators      #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Numeric.Expr
   ( ExprF(..)
@@ -45,7 +46,6 @@ import           Data.Coerce
 import           Data.Function
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
-import           Data.Monoid
 import           Data.Ord
 import           Data.Serialize
 import           Data.String
@@ -77,6 +77,10 @@ data ExprF a r where
   AppF :: Floating a => Func -> r -> ExprF a r
   PowF :: Floating a => r -> r -> ExprF a r
 
+deriving instance Functor (ExprF a)
+deriving instance Foldable (ExprF a)
+deriving instance Traversable (ExprF a)
+
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
   | Acs | Snh | Csh | Tnh | Ach | Ash | Ath
@@ -101,65 +105,6 @@ instance Show Func where
 
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
 instance Serialize Func
-
--- Have to do all of these by hand, no deriving for GADTs
-instance Functor (ExprF a) where
-  fmap f = \case
-    LitF a   -> LitF a
-    AddF x y -> AddF (f x) (f y)
-    SubF x y -> SubF (f x) (f y)
-    MulF x y -> MulF (f x) (f y)
-    AbsF x   -> AbsF (f x)
-    SigF x   -> SigF (f x)
-    NegF x   -> NegF (f x)
-    QutF x y -> QutF (f x) (f y)
-    RemF x y -> RemF (f x) (f y)
-    DivF x y -> DivF (f x) (f y)
-    PowF x y -> PowF (f x) (f y)
-    AppF g x -> AppF g (f x)
-
-instance Foldable (ExprF a) where
-  foldr f i = \case
-    LitF _   -> i
-    AddF x y -> f x (f y i)
-    SubF x y -> f x (f y i)
-    MulF x y -> f x (f y i)
-    AbsF x   -> f x i
-    SigF x   -> f x i
-    NegF x   -> f x i
-    QutF x y -> f x (f y i)
-    RemF x y -> f x (f y i)
-    DivF x y -> f x (f y i)
-    PowF x y -> f x (f y i)
-    AppF _ x -> f x i
-  foldMap f = \case
-    LitF _   -> mempty
-    AddF x y -> f x <> f y
-    SubF x y -> f x <> f y
-    MulF x y -> f x <> f y
-    AbsF x   -> f x
-    SigF x   -> f x
-    NegF x   -> f x
-    QutF x y -> f x <> f y
-    RemF x y -> f x <> f y
-    DivF x y -> f x <> f y
-    PowF x y -> f x <> f y
-    AppF _ x -> f x
-
-instance Traversable (ExprF a) where
-  traverse f = \case
-    LitF a   -> pure (LitF a)
-    AddF x y -> AddF   <$> f x <*> f y
-    SubF x y -> SubF   <$> f x <*> f y
-    MulF x y -> MulF   <$> f x <*> f y
-    AbsF x   -> AbsF   <$> f x
-    SigF x   -> SigF   <$> f x
-    NegF x   -> NegF   <$> f x
-    QutF x y -> QutF   <$> f x <*> f y
-    RemF x y -> RemF   <$> f x <*> f y
-    DivF x y -> DivF   <$> f x <*> f y
-    PowF x y -> PowF   <$> f x <*> f y
-    AppF g x -> AppF g <$> f x
 
 instance (Eq a, Eq r) => Eq (ExprF a r) where
   (==) = zipExpr (\_ _ -> False) (==) (==) (==) (&&)
@@ -628,68 +573,67 @@ instance MathML Func where
       Ash -> "arcsinh"
       Ath -> "arctanh"
 
-data VarExpr a =
-  Var String |
-  RExpr (ExprF a (VarExpr a))
-  deriving (Eq, Ord, Generic)
+newtype VarExpr a = VarExpr
+  { getVarExpr :: VarOr a (VarExpr a)
+  } deriving (Eq, Ord)
 
-data VarExprF a b =
-  VarF String |
-  RExprF (ExprF a b)
+data VarOr a r =
+  Var String |
+  RecExpr (ExprF a r)
   deriving (Eq, Ord, Functor, Foldable, Traversable)
 
-varExpr :: (String -> a) -> (ExprF b c -> a) -> VarExprF b c -> a
-varExpr v _ (VarF   s) = v s
-varExpr _ f (RExprF r) = f r
+type instance Base (VarExpr a) = VarOr a
+instance Recursive (VarExpr a) where project = coerce
+instance Corecursive (VarExpr a) where embed = coerce
 
-type instance Base (VarExpr a) = VarExprF a
-
-instance Recursive (VarExpr a) where
-  project = \case
-    Var s -> VarF s
-    RExpr e -> RExprF e
-
-instance Corecursive (VarExpr a) where
-  embed = \case
-    VarF s -> Var s
-    RExprF e -> RExpr e
+varExpr :: (String -> b) -> (ExprF a r -> b) -> VarOr a r -> b
+varExpr s _ (Var v) = s v
+varExpr _ f (RecExpr e) = f e
 
 instance Show a => Show (VarExpr a) where
   showsPrec _ = zygo palg alg where
     palg = varExpr (const 11) prec
     alg = varExpr showString pprAlg
 
+wrapE :: ExprF a (VarExpr a) -> VarExpr a
+wrapE = coerce' RecExpr where
+  coerce' :: (ExprF a (VarExpr a) -> VarOr a (VarExpr a))
+          -> ExprF a (VarExpr a) -> VarExpr a
+  coerce' = coerce
+
 instance Num a => Num (VarExpr a) where
-  (+) = RExpr .: AddF
-  (*) = RExpr .: MulF
-  negate = RExpr . NegF
-  abs = RExpr . AbsF
-  signum = RExpr . SigF
-  fromInteger = RExpr . LitF . fromInteger
+  (+)         = wrapE .: AddF
+  (*)         = wrapE .: MulF
+  (-)         = wrapE .: SubF
+  negate      = wrapE .  NegF
+  abs         = wrapE .  AbsF
+  signum      = wrapE .  SigF
+  fromInteger = wrapE .  LitF . fromInteger
 
 instance Fractional a => Fractional (VarExpr a) where
-  fromRational = RExpr . LitF . fromRational
-  (/) = RExpr .: DivF
+  fromRational = wrapE . LitF . fromRational
+  (/) = wrapE .: DivF
 
 instance Floating a => Floating (VarExpr a) where
-  pi    = RExpr . LitF $ pi
-  exp   = RExpr . AppF Exp
-  log   = RExpr . AppF Log
-  sin   = RExpr . AppF Sin
-  cos   = RExpr . AppF Cos
-  asin  = RExpr . AppF Asn
-  acos  = RExpr . AppF Acs
-  atan  = RExpr . AppF Atn
-  sinh  = RExpr . AppF Snh
-  cosh  = RExpr . AppF Csh
-  asinh = RExpr . AppF Ash
-  acosh = RExpr . AppF Ach
-  atanh = RExpr . AppF Ath
+  pi    = wrapE .  LitF $ pi
+  exp   = wrapE .  AppF Exp
+  log   = wrapE .  AppF Log
+  sin   = wrapE .  AppF Sin
+  cos   = wrapE .  AppF Cos
+  asin  = wrapE .  AppF Asn
+  acos  = wrapE .  AppF Acs
+  atan  = wrapE .  AppF Atn
+  sinh  = wrapE .  AppF Snh
+  cosh  = wrapE .  AppF Csh
+  asinh = wrapE .  AppF Ash
+  acosh = wrapE .  AppF Ach
+  atanh = wrapE .  AppF Ath
+  (**)  = wrapE .: PowF
 
 instance (Num a, MathML a) => MathML (VarExpr a) where
   mlRep = cata (varExpr cstRep mlalg)
 
-instance IsString (VarExpr a) where fromString = Var
+instance IsString (VarExpr a) where fromString = VarExpr . Var
 
 infixr 9 .:
 (.:) :: (c -> d) -> (a -> b -> c) -> a -> b -> d
@@ -698,3 +642,4 @@ infixr 9 .:
 infixr 9 .#
 (.#) :: Coercible b c => (b -> c) -> (a -> b) -> a -> c
 (.#) _ = coerce
+
