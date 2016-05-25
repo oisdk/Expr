@@ -31,7 +31,6 @@ evalAlg = \case
   DivF x y -> x / y
   AppF f x -> appF f x
 
-
 litArb :: (Num a, Arbitrary a) => Gen (ExprF a r)
 litArb = LitF . abs <$> arbitrary
 
@@ -54,7 +53,6 @@ fracArb r = [ DivF r r ]
 
 floatArb :: Floating a => r -> [Gen (ExprF a r)]
 floatArb r = [ pure $ PowF r r, flip AppF r <$> arbitrary ]
-
 
 putAlg :: Serialize a => ExprF a (PutM ()) -> PutM ()
 putAlg = \case

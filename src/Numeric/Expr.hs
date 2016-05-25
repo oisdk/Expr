@@ -60,8 +60,6 @@ safeEvalAlg = \case
 safeEval :: Eq a => Expr a -> Either String a
 safeEval = cataM safeEvalAlg
 
-
-
 showBracks :: Show a => Expr a -> String
 showBracks = cata $ \case
   LitF a   -> show a
@@ -77,7 +75,6 @@ showBracks = cata $ \case
   PowF x y -> p x ++ " ^ " ++ p y
   RemF x y -> p x ++ " % " ++ p y
   where p s = "(" ++ s ++ ")"
-
 
 -- | Normalizes associative operators
 assoc :: Expr a -> Expr a
@@ -122,9 +119,3 @@ approxEqual eq = zipo alg `on` assoc where
   alg (DivF w x) (DivF y z) = w y && x z
   alg (AppF w x) (AppF y z) = w == y && x z
   alg _ _ = False
-
-
-
-
-
-
