@@ -6,14 +6,14 @@ module Numeric.Expr.Wrappers
   , FracExpr(..)
   ) where
 
-import Test.QuickCheck
-import Data.Serialize
-import Data.Functor.Foldable.Extras
-import Data.Functor.Foldable
-import Data.Coerce
-import Numeric.Expr.Synonyms
-import Numeric.Expr.ExprType
-import Numeric.Expr.Algs
+import           Data.Coerce
+import           Data.Functor.Foldable
+import           Data.Functor.Foldable.Extras
+import           Data.Serialize
+import           Numeric.Expr.Algs
+import           Numeric.Expr.ExprType
+import           Numeric.Expr.Synonyms
+import           Test.QuickCheck
 
 -- newtype wrappers for subsets of Expr , similar to QuickCheck's
 -- Positive / Small, etc

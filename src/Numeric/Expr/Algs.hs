@@ -12,9 +12,9 @@ module Numeric.Expr.Algs
   , prec
   ) where
 
-import Test.QuickCheck
-import Data.Serialize
-import Numeric.Expr.ExprF
+import           Data.Serialize
+import           Numeric.Expr.ExprF
+import           Test.QuickCheck
 
 evalAlg :: ExprF a a -> a
 evalAlg = \case

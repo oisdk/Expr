@@ -12,9 +12,9 @@ module Numeric.Expr.ExprF
   , appF
   ) where
 
-import GHC.Generics
-import Test.QuickCheck
-import Data.Serialize
+import           Data.Serialize
+import           GHC.Generics
+import           Test.QuickCheck
 
 data ExprF a r where
   LitF :: a -> ExprF a r

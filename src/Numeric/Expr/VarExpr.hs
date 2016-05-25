@@ -1,7 +1,7 @@
-{-# LANGUAGE TypeFamilies #-}
-{-# LANGUAGE DeriveFoldable #-}
-{-# LANGUAGE DeriveFunctor #-}
+{-# LANGUAGE DeriveFoldable    #-}
+{-# LANGUAGE DeriveFunctor     #-}
 {-# LANGUAGE DeriveTraversable #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Numeric.Expr.VarExpr
   ( VarExpr
@@ -9,12 +9,12 @@ module Numeric.Expr.VarExpr
   , varExpr
   ) where
 
-import Data.Functor.Foldable
-import Data.String
-import Data.Coerce
-import Numeric.Expr.ExprF
-import Numeric.Expr.Algs
-import Numeric.Expr.Utils
+import           Data.Coerce
+import           Data.Functor.Foldable
+import           Data.String
+import           Numeric.Expr.Algs
+import           Numeric.Expr.ExprF
+import           Numeric.Expr.Utils
 
 newtype VarExpr a = VarExpr
   { _getVarExpr :: VarOr a (VarExpr a)

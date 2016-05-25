@@ -2,8 +2,8 @@
 
 module Numeric.Expr.Synonyms where
 
-import Numeric.Expr.ExprType
-import Numeric.Expr.ExprF
+import           Numeric.Expr.ExprF
+import           Numeric.Expr.ExprType
 
 pattern x :+: y = Expr (AddF x y)
 pattern x :*: y = Expr (MulF x y)
