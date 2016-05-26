@@ -13,6 +13,7 @@ cabal.sandbox.config
 *.prof
 *.aux
 *.hp
+.#*
 .stack-work/
 TAGS
 TAGS
