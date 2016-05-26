@@ -14,12 +14,6 @@ cabal.sandbox.config
 *.aux
 *.hp
 .#*
+flycheck_*
 .stack-work/
 TAGS
-TAGS
-
-src/Numeric/.#Expr.hs
-
-src/Numeric/flycheck_Expr.hs
-
-src/Numeric/Expr/.#Wrappers.hs
