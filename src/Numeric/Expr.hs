@@ -1,5 +1,11 @@
-{-# LANGUAGE LambdaCase      #-}
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FlexibleContexts  #-}
+{-# LANGUAGE GADTs             #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE OverloadedLists   #-}
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE PatternSynonyms   #-}
+{-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE TypeOperators     #-}
 
 module Numeric.Expr
   ( ExprF(..)
