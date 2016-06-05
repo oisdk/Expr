@@ -28,6 +28,8 @@ module Numeric.Expr
   , approxEqual
   , showBracks
   , mlRep
+  , flatten
+  , appF
   ) where
 
 import           Control.Lens                 hiding (para)
