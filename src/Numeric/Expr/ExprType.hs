@@ -1,11 +1,12 @@
-{-# LANGUAGE LambdaCase   #-}
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE LambdaCase        #-}
+{-# LANGUAGE TypeFamilies      #-}
 
 module Numeric.Expr.ExprType
   ( Expr(..)
+  , flatten
   ) where
 
-import           Control.Lens                 (Plated, plate)
+import           Control.Lens                 (Plated, plate, Wrapped(..), iso)
 import           Data.Coerce
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
@@ -21,9 +22,28 @@ newtype Expr a =
   Expr { _getExpr :: ExprF a (Expr a)
        } deriving (Eq, Ord)
 
+flatten :: Expr (Expr a) -> Expr a
+flatten = cata $ \case
+  LitF x   -> x
+  AddF x y -> x + y
+  SubF x y -> x - y
+  MulF x y -> x * y
+  AbsF x   -> abs x
+  SigF x   -> signum x
+  NegF x   -> negate x
+  QutF x y -> quot x y
+  RemF x y -> rem x y
+  DivF x y -> x / y
+  AppF f x -> appF f x
+  PowF x y -> x ** y
+
 coerceBi :: (Expr a -> Expr a -> ExprF a (Expr a))
          -> Expr a -> Expr a -> Expr a
 coerceBi = coerce
+
+instance Wrapped (Expr a) where
+  type Unwrapped (Expr a) = ExprF a (Expr a)
+  _Wrapped' = iso _getExpr Expr
 
 instance Num a => Num (Expr a) where
   (+) = coerceBi AddF
