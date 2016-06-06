@@ -1,8 +1,8 @@
+{-# LANGUAGE FlexibleInstances      #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE LambdaCase             #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE PatternSynonyms        #-}
+{-# LANGUAGE ViewPatterns           #-}
 
 module Numeric.Expr.Synonyms where
 
@@ -12,6 +12,7 @@ import           Numeric.Expr.ExprType
 
 class AsExprF a b c | a -> b, a -> c where exprFPrism :: Prism' a (ExprF b c)
 instance AsExprF (Expr a) a (Expr a) where exprFPrism = coerced
+instance AsExprF (ExprF a r) a r where exprFPrism = simple
 
 pattern x :+: y <- (preview exprFPrism -> Just (AddF x y)) where
   x :+: y = review exprFPrism (AddF x y)
@@ -37,3 +38,8 @@ pattern Abs x <- (preview exprFPrism -> Just (AbsF x)) where
   Abs x = review exprFPrism (AbsF x)
 pattern Lit a <- (preview exprFPrism -> Just (LitF a)) where
   Lit a = review exprFPrism (LitF a)
+
+class CanVar a where _Var :: Prism' a String
+
+pattern Var n <- (preview _Var -> Just n) where
+  Var = review _Var

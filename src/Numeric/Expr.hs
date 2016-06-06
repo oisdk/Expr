@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE PatternSynonyms   #-}
+{-# LANGUAGE FlexibleContexts  #-}
 
 module Numeric.Expr
   ( ExprF(..)
@@ -29,6 +30,7 @@ module Numeric.Expr
   , showBracks
   , mlRep
   , flatten
+  , flattenVar
   , appF
   ) where
 
@@ -43,6 +45,29 @@ import           Numeric.Expr.MathML
 import           Numeric.Expr.Synonyms
 import           Numeric.Expr.VarExpr
 import           Numeric.Expr.Wrappers
+
+flatten :: Expr (Expr a) -> Expr a
+flatten = cata flatAlg
+
+flattenVar :: VarExpr (VarExpr a) -> VarExpr a
+flattenVar = cata $ \case
+   VarF s -> Var s
+   RecExprF e -> flatAlg e
+
+flatAlg :: ExprF a a -> a
+flatAlg = \case
+  LitF x   -> x
+  AddF x y -> x + y
+  SubF x y -> x - y
+  MulF x y -> x * y
+  AbsF x   -> abs x
+  SigF x   -> signum x
+  NegF x   -> negate x
+  QutF x y -> quot x y
+  RemF x y -> rem x y
+  DivF x y -> x / y
+  AppF f x -> appF f x
+  PowF x y -> x ** y
 
 eval :: Expr a -> a
 eval = cata evalAlg
@@ -80,7 +105,7 @@ assoc = rewrite $ \case
     _ -> Nothing
 
 -- | Very basic simplification
-simplify :: (Num a, Eq a) => Expr a -> Expr a
+simplify :: (Num a, Eq a, AsExprF a b a, Plated a) => a -> a
 simplify = rewrite $ \case
   x :+: 0 -> Just x
   0 :+: x -> Just x
