@@ -1,4 +1,5 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE LambdaCase                 #-}
 
 module Numeric.Expr.Wrappers
   ( NumExpr(..)
@@ -30,21 +31,21 @@ import           Test.QuickCheck
 
 newtype NumExpr a =
   NumExpr { getNumExpr :: Expr a
-          } deriving (Eq, Ord, Show)
+          } deriving (Eq, Ord, Show, Num)
 
 -- | A subset of Expr, which only supports the operations of the
 -- Integral typeclass. Has different Arbitrary and Serialize
 -- instances to Expr.
 newtype IntExpr a =
   IntExpr { getIntExpr :: Expr a
-          } deriving (Eq, Ord, Show)
+          } deriving (Eq, Ord, Show, Num, Enum, Real, Integral)
 
 -- | A subset of Expr, which only supports the operations of the
 -- Fractional typeclass. Has different Arbitrary and Serialize
 -- instances to Expr.
 newtype FracExpr a =
   FracExpr { getFracExpr :: Expr a
-           } deriving (Eq, Ord, Show)
+           } deriving (Eq, Ord, Show, Num, Real, Fractional)
 
 instance (Num a, Arbitrary a) => Arbitrary (NumExpr a) where
   arbitrary = NumExpr <$> sized (anaM alg) where
@@ -67,7 +68,7 @@ instance (Fractional a, Arbitrary a) => Arbitrary (FracExpr a) where
 instance (Num a, Serialize a) => Serialize (NumExpr a) where
   put = cata putAlg . getNumExpr
   get = getn where
-    getn = coerce (alg =<< getWord8)
+    getn = (coerce :: Get (Expr a) -> Get (NumExpr a)) (alg =<< getWord8)
     gete = (coerce :: Get (NumExpr a) -> Get (Expr a)) getn
     alg = \case
       0  -> Lit   <$> get
@@ -82,7 +83,7 @@ instance (Num a, Serialize a) => Serialize (NumExpr a) where
 instance (Integral a, Serialize a) => Serialize (IntExpr a) where
   put = cata putAlg . getIntExpr
   get = getn where
-    getn = coerce (alg =<< getWord8)
+    getn = (coerce :: Get (Expr a) -> Get (IntExpr a)) (alg =<< getWord8)
     gete = (coerce :: Get (IntExpr a) -> Get (Expr a)) getn
     alg = \case
       0  -> Lit    <$> get
@@ -99,7 +100,7 @@ instance (Integral a, Serialize a) => Serialize (IntExpr a) where
 instance (Fractional a, Serialize a) => Serialize (FracExpr a) where
   put = cata putAlg . getFracExpr
   get = getn where
-    getn = coerce (alg =<< getWord8)
+    getn = (coerce :: Get (Expr a) -> Get (FracExpr a)) (alg =<< getWord8)
     gete = (coerce :: Get (FracExpr a) -> Get (Expr a)) getn
     alg = \case
       0  -> Lit   <$> get

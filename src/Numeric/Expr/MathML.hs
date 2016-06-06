@@ -4,14 +4,17 @@
 
 module Numeric.Expr.MathML
   ( MathML(..)
+  , sampleML
   ) where
 
 import           Data.Functor.Foldable
 import           Data.Text             (pack)
+import qualified Data.Text.Lazy        as L
 import           Numeric.Expr.ExprF
 import           Numeric.Expr.ExprType
 import           Numeric.Expr.VarExpr
 import           Text.Taggy.DOM
+import           Text.Taggy.Renderer
 
 class MathML a where mlRep :: a -> Node
 
@@ -62,8 +65,7 @@ mlalg = \case
     SigF   x -> app [NodeElement (Element "signum" [] []), x]
     where
       app = NodeElement . Element "apply" []
-      symb x =
-        NodeElement (Element
-                       "csymbol"
-                       [("cd","arith1")]
-                       [NodeContent x])
+      symb x = NodeElement (Element x [] [])
+
+sampleML :: MathML a => Expr a -> IO ()
+sampleML = putStrLn . L.unpack . renderWith True . mlRep

@@ -1,19 +1,39 @@
-{-# LANGUAGE PatternSynonyms #-}
+{-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE LambdaCase             #-}
+{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE PatternSynonyms        #-}
 
 module Numeric.Expr.Synonyms where
 
+import           Control.Lens
 import           Numeric.Expr.ExprF
 import           Numeric.Expr.ExprType
 
-pattern x :+: y = Expr (AddF x y)
-pattern x :*: y = Expr (MulF x y)
-pattern x :/: y = Expr (DivF x y)
-pattern x :%: y = Expr (RemF x y)
-pattern x :$: y = Expr (AppF x y)
-pattern x :-: y = Expr (SubF x y)
-pattern x :^: y = Expr (PowF x y)
-pattern x ://: y = Expr (QutF x y)
-pattern Neg x = Expr (NegF x)
-pattern Sig x = Expr (SigF x)
-pattern Abs x = Expr (AbsF x)
-pattern Lit a = Expr (LitF a)
+class AsExprF a b c | a -> b, a -> c where exprFPrism :: Prism' a (ExprF b c)
+instance AsExprF (Expr a) a (Expr a) where exprFPrism = coerced
+
+pattern x :+: y <- (preview exprFPrism -> Just (AddF x y)) where
+  x :+: y = review exprFPrism (AddF x y)
+pattern x :*: y <- (preview exprFPrism -> Just (MulF x y)) where
+  x :*: y = review exprFPrism (MulF x y)
+pattern x :/: y <- (preview exprFPrism -> Just (DivF x y)) where
+  x :/: y = review exprFPrism (DivF x y)
+pattern x :%: y <- (preview exprFPrism -> Just (RemF x y)) where
+  x :%: y = review exprFPrism (RemF x y)
+pattern f :$: x <- (preview exprFPrism -> Just (AppF f x)) where
+  f :$: x = review exprFPrism (AppF f x)
+pattern x :-: y <- (preview exprFPrism -> Just (SubF x y)) where
+  x :-: y = review exprFPrism (SubF x y)
+pattern x :^: y <- (preview exprFPrism -> Just (PowF x y)) where
+  x :^: y = review exprFPrism (PowF x y)
+pattern x ://: y <- (preview exprFPrism -> Just (QutF x y)) where
+  x ://: y = review exprFPrism (QutF x y)
+pattern Neg x <- (preview exprFPrism -> Just (NegF x)) where
+  Neg x = review exprFPrism (NegF x)
+pattern Sig x <- (preview exprFPrism -> Just (SigF x)) where
+  Sig x = review exprFPrism (SigF x)
+pattern Abs x <- (preview exprFPrism -> Just (AbsF x)) where
+  Abs x = review exprFPrism (AbsF x)
+pattern Lit a <- (preview exprFPrism -> Just (LitF a)) where
+  Lit a = review exprFPrism (LitF a)

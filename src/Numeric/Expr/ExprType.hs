@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE TypeFamilies      #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 
 module Numeric.Expr.ExprType
   ( Expr(..)

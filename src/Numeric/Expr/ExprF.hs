@@ -15,7 +15,7 @@ module Numeric.Expr.ExprF
 import           Data.Serialize
 import           GHC.Generics
 import           Test.QuickCheck
-
+import Control.Lens
 data ExprF a r where
   LitF :: a -> ExprF a r
 
@@ -46,6 +46,9 @@ data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
   | Acs | Snh | Csh | Tnh | Ach | Ash | Ath
           deriving (Eq, Ord, Enum, Bounded, Generic)
+
+_LitF :: Prism' (ExprF a r) a
+_LitF = prism' LitF $ \case LitF x -> Just x; _ -> Nothing
 
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
 instance Serialize Func
