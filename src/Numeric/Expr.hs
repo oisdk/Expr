@@ -98,7 +98,7 @@ showBracks = cata $ \case
   where p s = "(" ++ s ++ ")"
 
 -- | Normalizes associative operators
-assoc :: Expr a -> Expr a
+assoc :: (Plated a, AsExprF a b a) => a -> a
 assoc = rewrite $ \case
     x :+: (y :+: z) -> Just $ (x :+: y) :+: z
     x :*: (y :*: z) -> Just $ (x :*: y) :*: z
@@ -125,18 +125,20 @@ simplify = rewrite $ \case
   x ://: y | x == y -> Just $ Lit 1
   _ -> Nothing
 
-approxEqual :: (a -> a -> Bool) -> Expr a -> Expr a -> Bool
-approxEqual eq = zipo alg `on` assoc where
-  alg (LitF a  ) (LitF b  ) = eq a b
-  alg (AddF w x) (AddF y z) = w y && x z
-  alg (SubF w x) (SubF y z) = w y && x z
-  alg (PowF w x) (PowF y z) = w y && x z
-  alg (MulF w x) (MulF y z) = w y && x z
-  alg (AbsF x  ) (AbsF y  ) = x y
-  alg (SigF x  ) (SigF y  ) = x y
-  alg (NegF x  ) (NegF y  ) = x y
-  alg (QutF w x) (QutF y z) = w y && x z
-  alg (RemF w x) (RemF y z) = w y && x z
-  alg (DivF w x) (DivF y z) = w y && x z
-  alg (AppF w x) (AppF y z) = w == y && x z
-  alg _ _ = False
+approxEqual :: (Plated e, AsExprF e a e, Recursive e, AsExprF (Base e e) a e
+               , AsExprF (Base e (e -> Bool)) a (e -> Bool))
+            => (a -> a -> Bool) -> e -> e -> Bool
+approxEqual eq = zipo (~=) `on` assoc where
+  Lit a ~= Lit b = eq a b
+  (w :+: x) ~= (y :+: z) = w y && x z
+  (w :-: x) ~= (y :-: z) = w y && x z
+  (w :^: x) ~= (y :^: z) = w y && x z
+  (w :*: x) ~= (y :*: z) = w y && x z
+  Abs x ~= Abs y = x y
+  Sig x ~= Sig y = x y
+  Neg x ~= Neg y = x y
+  (w ://: x) ~= (y ://: z) = w y && x z
+  (w :%: x) ~= (y :%: z) = w y && x z
+  (w :/: x) ~= (y :/: z) = w y && x z
+  (w :$: x) ~= (y :$: z) = w == y && x z
+  _ ~= _ = False

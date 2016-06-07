@@ -35,6 +35,7 @@ library
                      , unordered-containers
                      , text
                      , free
+                     , containers
   ghc-options:         -Wall -Werror
   default-language:    Haskell2010
 
