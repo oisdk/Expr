@@ -10,6 +10,7 @@ module Numeric.Expr.VarExpr
   ( VarExpr(..)
   , VarOr(..)
   , varExpr
+  , CanVar(..)
   ) where
 
 import           Control.Lens
