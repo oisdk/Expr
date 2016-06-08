@@ -26,6 +26,11 @@ data VarExpr a =
   RecExpr (ExprF a (VarExpr a))
   deriving (Eq, Ord)
 
+instance Plated (VarExpr a) where
+  plate f = \case
+    VarE s -> pure $ VarE s
+    RecExpr e -> RecExpr <$> traverse f e
+
 data VarOr a r =
   VarF String |
   RecExprF (ExprF a r)
