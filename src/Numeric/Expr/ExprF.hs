@@ -32,7 +32,7 @@ instance Show Func where
     Ash -> "asinh"; Ath -> "atanh"
 
 -- | Kind to represent whether or not an expression can hold variables
-data VarAbility a = HasVar a | NoVar deriving (Eq, Ord)
+data VarAbility a = HasVar a | NoVar
 
 -- | Unfixed expression type
 data ExprF littype vartype r where
