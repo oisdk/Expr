@@ -31,6 +31,8 @@ module Numeric.Expr.ExprType
   , approxEqual
   , simplify
   , safeEval
+  , getVars
+  , repVars
   ) where
 
 import           Control.Lens
@@ -43,7 +45,7 @@ import           Numeric.Expr.ExprF
 import           Test.QuickCheck
 
 newtype Expr' lit var = Expr'
-   { getExpr' :: ExprF lit var (Expr' lit var)}
+   { getExpr' :: ExprF lit var (Expr' lit var) }
 
 deriving instance Eq lit => Eq (Expr' lit 'NoVar)
 deriving instance (Eq lit, Eq var) => Eq (Expr' lit ('HasVar var))
@@ -229,9 +231,17 @@ newtype IntExpr a = IntExpr
   { getIntExpr :: Expr a
   } deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
 
-
 instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
   arbitrary = IntExpr <$> sized (anaM alg) where
     alg 0 = oneof $ litArb 0
     alg n = oneof $ litArb r ++ numArb r ++ intArb r where
       r = n `div` 2
+
+getVars :: (ExprType e, VarType e ~ 'HasVar a) => e -> [a]
+getVars = cata alg where
+  alg :: ExprF n ('HasVar a) [a] -> [a]
+  alg (VarF x) = [x]
+  alg e = concat e
+
+repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a) => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
+repVars f = cataM (either f (pure.embed) . getVar)

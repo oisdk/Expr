@@ -2,6 +2,7 @@
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE DataKinds         #-}
 
 module Numeric.Expr.MathML
   ( MathML(..)
@@ -26,11 +27,9 @@ instance MathML Int     where mlRep = cstRep . show
 instance MathML Integer where mlRep = cstRep . show
 instance MathML Float   where mlRep = cstRep . show
 
-instance MathML a => MathML (Expr a) where mlRep = cata (mlalg undefined)
+instance MathML a => MathML (Expr a) where mlRep = cata mlalg
 instance MathML a => MathML (VarExpr a) where
-  mlRep = cata $ \case
-    VarF x -> cstRep x
-    e -> mlalg undefined e
+  mlRep = cata (either cstRep mlalg . getVar)
 
 instance MathML Func where
   mlRep f = NodeElement (Element n [] []) where
@@ -40,9 +39,8 @@ instance MathML Func where
       Acs -> "arccos"; Snh -> "sinh"; Csh -> "cosh"; Tnh -> "tanh"
       Ach -> "arccosh"; Ash -> "arcsinh"; Ath -> "arctanh"
 
-mlalg :: MathML a => Node -> ExprF a v Node -> Node
-mlalg d = \case
-    VarF _ -> d
+mlalg :: MathML a => ExprF a 'NoVar Node -> Node
+mlalg = \case
     LitF a -> mlRep a
     NegF x -> app [symb "minus"   , x   ]
     x :- y -> app [symb "minus"   , x, y]

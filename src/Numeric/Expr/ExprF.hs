@@ -13,6 +13,7 @@ module Numeric.Expr.ExprF
   , Func(..)
   , VarAbility(..)
   , zipExpr
+  , getVar
   ) where
 
 import           Test.QuickCheck
@@ -70,6 +71,22 @@ instance (Ord a, Ord r) => Ord (ExprF a 'NoVar r) where
       (compare (prec x) (prec y))
       (zipExpr compare compare compare mappend undefined x y)
 deriving instance (Ord a, Ord r, Ord v) => Ord (ExprF a ('HasVar v) r)
+
+getVar :: ExprF l ('HasVar a) r -> Either a (ExprF l 'NoVar r)
+getVar = \case
+  LitF x -> Right $ LitF x
+  VarF x -> Left x
+  x :+ y -> Right $ x :+ y
+  x :- y -> Right $ x :- y
+  x :* y -> Right $ x :* y
+  AbsF x -> Right $ AbsF x
+  SigF x -> Right $ SigF x
+  NegF x -> Right $ NegF x
+  x :÷ y -> Right $ x :÷ y
+  x :% y -> Right $ x :% y
+  x :/ y -> Right $ x :/ y
+  x :$ y -> Right $ x :$ y
+  x :^ y -> Right $ x :^ y
 
 prec :: ExprF l v r -> Int
 prec = \case
