@@ -18,6 +18,8 @@ library
   exposed-modules:     Numeric.Expr
   other-modules:       Numeric.Expr.ExprF
                      , Numeric.Expr.MathML
+                     , Numeric.Expr.Algs
+                     , Numeric.Expr.ExprType
   build-depends:       base >= 4.7 && < 5
                      , QuickCheck
                      , lens

@@ -12,6 +12,7 @@ import           Data.Functor.Foldable
 import           Data.Text             (pack)
 import qualified Data.Text.Lazy        as L
 import           Numeric.Expr.ExprF
+import           Numeric.Expr.ExprType
 import           Text.Taggy.DOM
 import           Text.Taggy.Renderer
 

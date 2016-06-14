@@ -1,7 +1,5 @@
-module Numeric.Expr
-  ( module Numeric.Expr.ExprF
-  , module Numeric.Expr.MathML
-  ) where
+module Numeric.Expr (module X) where
 
-import           Numeric.Expr.ExprF
-import           Numeric.Expr.MathML
+import           Numeric.Expr.ExprF    as X hiding (zipExpr)
+import           Numeric.Expr.ExprType as X
+import           Numeric.Expr.MathML   as X
