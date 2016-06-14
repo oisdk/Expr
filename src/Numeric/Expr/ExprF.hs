@@ -1,20 +1,16 @@
 {-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE ScopedTypeVariables        #-}
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveGeneric              #-}
 {-# LANGUAGE DeriveTraversable          #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE RankNTypes                 #-}
 
 module Numeric.Expr.ExprF
   ( ExprF(..)
@@ -47,14 +43,13 @@ import           Control.Lens
 import           Data.Coerce
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
-import           GHC.Generics                 (Generic)
 import           Test.QuickCheck
 import           Data.Function
 
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
   | Acs | Snh | Csh | Tnh | Ach | Ash | Ath
-          deriving (Eq, Ord, Enum, Bounded, Generic)
+          deriving (Eq, Ord, Enum, Bounded)
 
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
 
