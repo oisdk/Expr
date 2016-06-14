@@ -20,6 +20,7 @@ library
                      , Numeric.Expr.MathML
                      , Numeric.Expr.Algs
                      , Numeric.Expr.ExprType
+                     , Numeric.Expr.Parse
   build-depends:       base >= 4.7 && < 5
                      , QuickCheck
                      , lens
@@ -27,6 +28,7 @@ library
                      , recursion-schemes-extras
                      , taggy
                      , text
+                     , parsers
   ghc-options:         -Wall -Werror
   default-language:    Haskell2010
 
@@ -37,6 +39,7 @@ test-suite Expr-test
   build-depends:       base
                      , Expr
                      , QuickCheck
+                     , trifecta >= 1.5
   ghc-options:         -threaded -rtsopts -with-rtsopts=-N
   default-language:    Haskell2010
 

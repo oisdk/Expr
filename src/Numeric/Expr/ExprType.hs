@@ -33,6 +33,7 @@ module Numeric.Expr.ExprType
   , safeEval
   , getVars
   , repVars
+  , showBrack
   ) where
 
 import           Control.Lens
@@ -99,7 +100,7 @@ instance Floating a => Floating (Expr' a v) where
   asinh = (:$:) Ash
   acosh = (:$:) Ach
   atanh = (:$:) Ath
-  (**) = (:^:)
+  (**)  = (:^:)
 
 instance (Show a) => Show (Expr' a v) where
   showsPrec _ = zygo prec pprAlg
@@ -122,7 +123,6 @@ class ( Plated e
       , Base e ~ ExprF (LitType e) (VarType e)
       ) => ExprType e where
   _Expr :: Iso' e (ExprF (LitType e) (VarType e) e)
-
 
 newtype Expr a = Expr
   { getExpr :: Expr' a 'NoVar
@@ -182,7 +182,9 @@ pattern Neg x <- (view _Expr -> NegF x) where
 assoc :: ExprType e => e -> e
 assoc = rewrite $ \case
   x :*: (y :*: z) -> Just $ (x :*: y) :*: z
+  x :*: (y :/: z) -> Just $ (x :*: y) :/: z
   x :+: (y :+: z) -> Just $ (x :+: y) :+: z
+  x :+: (y :-: z) -> Just $ (x :+: y) :-: z
   _               -> Nothing
 
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
@@ -238,10 +240,11 @@ instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
       r = n `div` 2
 
 getVars :: (ExprType e, VarType e ~ 'HasVar a) => e -> [a]
-getVars = cata alg where
-  alg :: ExprF n ('HasVar a) [a] -> [a]
-  alg (VarF x) = [x]
-  alg e = concat e
+getVars = cata (either pure concat . getVar)
 
-repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a) => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
+repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
+        => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
 repVars f = cataM (either f (pure.embed) . getVar)
+
+showBrack :: (RealFrac a, Show a) => Expr a -> String
+showBrack e = cata brcAlg e ""

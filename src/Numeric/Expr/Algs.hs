@@ -54,6 +54,21 @@ pprAlg e = case e of
     parL = uncurry $ showParen . (prec e > )
     parR = uncurry $ showParen . (prec e >=)
 
+brcAlg :: (Show a, RealFrac a) => ExprF a 'NoVar ShowS -> ShowS
+brcAlg = \case
+  LitF a -> shows (floor a :: Integer)
+  NegF x -> showString "-" . showParen True x
+  x :+ y -> showParen True x . showString " + " . showParen True y
+  x :- y -> showParen True x . showString " - " . showParen True y
+  x :/ y -> showParen True x . showString " / " . showParen True y
+  x :* y -> showParen True x . showString " * " . showParen True y
+  x :^ y -> showParen True x . showString " ^ " . showParen True y
+  f :$ x -> shows f . showChar ' ' . showParen True x
+  AbsF x -> showString "abs " . showParen True x
+  SigF x -> showString "signum " . showParen True x
+  x :÷ y -> showParen True x . showString " // " . showParen True y
+  x :% y -> showParen True x . showString " % "  . showParen True y
+
 prec :: ExprF a v r -> Int
 prec = \case
   LitF _ -> 11; VarF _ -> 11; AbsF _ -> 10; SigF _ -> 10; _ :$ _ -> 10;
