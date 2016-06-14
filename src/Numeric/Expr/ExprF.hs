@@ -2,15 +2,15 @@
 {-# LANGUAGE DeriveFoldable             #-}
 {-# LANGUAGE DeriveFunctor              #-}
 {-# LANGUAGE DeriveTraversable          #-}
+{-# LANGUAGE FlexibleContexts           #-}
 {-# LANGUAGE FlexibleInstances          #-}
 {-# LANGUAGE GADTs                      #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
+{-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE StandaloneDeriving         #-}
 {-# LANGUAGE TypeFamilies               #-}
-{-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ViewPatterns               #-}
-{-# LANGUAGE FlexibleContexts           #-}
 
 module Numeric.Expr.ExprF
   ( ExprF(..)
@@ -20,6 +20,7 @@ module Numeric.Expr.ExprF
   , Expr
   , VarExpr
   , VarAbility(..)
+  , IntExpr(..)
   , pattern Lit
   , pattern Var
   , pattern (:+:)
@@ -37,14 +38,15 @@ module Numeric.Expr.ExprF
   , assoc
   , approxEqual
   , simplify
+  , safeEval
   ) where
 
 import           Control.Lens
 import           Data.Coerce
+import           Data.Function
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
 import           Test.QuickCheck
-import           Data.Function
 
 data Func =
     Sin | Cos | Exp | Log | Tan | Atn | Asn
@@ -120,6 +122,13 @@ evalAlg = \case
   x :/ y -> x / y
   f :$ x -> appF f x
   x :^ y -> x ** y
+
+safeEvalAlg :: Eq n => ExprF n 'NoVar n -> Maybe n
+safeEvalAlg = \case
+  _ :/ 0 -> Nothing
+  _ :÷ 0 -> Nothing
+  _ :% 0 -> Nothing
+  x -> Just $ evalAlg x
 
 -- | Fixed
 
@@ -353,6 +362,9 @@ simplify = rewrite $ \case
 eval :: (ExprType e, VarType e ~ 'NoVar) => e -> LitType e
 eval = cata evalAlg
 
+safeEval :: (ExprType e, VarType e ~ 'NoVar, Eq (LitType e)) => e -> Maybe (LitType e)
+safeEval = cataM safeEvalAlg
+
 litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a v r)]
 litArb = const [LitF . abs <$> arbitrary]
 
@@ -361,8 +373,8 @@ numArb r = map pure
   [ r :+ r, r :- r, r :* r
   , AbsF r, SigF r, NegF r ]
 
--- intArb :: Integral a => r -> [Gen (ExprF a v r)]
--- intArb r = map pure [r :÷ r, r :% r]
+intArb :: Integral a => r -> [Gen (ExprF a v r)]
+intArb r = map pure [r :÷ r, r :% r]
 
 fracArb :: Fractional a => r -> [Gen (ExprF a v r)]
 fracArb r = [ pure (r :/ r) ]
@@ -383,4 +395,15 @@ instance (Floating a, Arbitrary a) => Arbitrary (VarExpr a) where
   arbitrary = sized (anaM alg) where
     alg 0 = oneof $ litArb 0 ++ varArb 0
     alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r ++ varArb r where
+      r = n `div` 2
+
+newtype IntExpr a = IntExpr
+  { getIntExpr :: Expr a
+  } deriving (Eq, Ord, Num, Real, Enum, Integral, Show)
+
+
+instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
+  arbitrary = IntExpr <$> sized (anaM alg) where
+    alg 0 = oneof $ litArb 0
+    alg n = oneof $ litArb r ++ numArb r ++ intArb r where
       r = n `div` 2
