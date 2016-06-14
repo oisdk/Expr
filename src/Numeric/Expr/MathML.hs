@@ -1,3 +1,4 @@
+{-# LANGUAGE GADTs             #-}
 {-# LANGUAGE LambdaCase        #-}
 {-# LANGUAGE OverloadedLists   #-}
 {-# LANGUAGE OverloadedStrings #-}
@@ -11,8 +12,6 @@ import           Data.Functor.Foldable
 import           Data.Text             (pack)
 import qualified Data.Text.Lazy        as L
 import           Numeric.Expr.ExprF
-import           Numeric.Expr.ExprType
-import           Numeric.Expr.VarExpr
 import           Text.Taggy.DOM
 import           Text.Taggy.Renderer
 
@@ -26,43 +25,32 @@ instance MathML Int     where mlRep = cstRep . show
 instance MathML Integer where mlRep = cstRep . show
 instance MathML Float   where mlRep = cstRep . show
 
-instance MathML a => MathML (Expr a) where mlRep = cata mlalg
+instance MathML a => MathML (Expr a) where mlRep = cata (mlalg undefined)
+instance MathML a => MathML (VarExpr a) where mlRep = cata (mlalg cstRep)
 
 instance MathML Func where
   mlRep f = NodeElement (Element n [] []) where
     n = case f of
-      Sin -> "sin"
-      Cos -> "cos"
-      Exp -> "exp"
-      Log -> "log"
-      Tan -> "tan"
-      Atn -> "arctan"
-      Asn -> "arcsin"
-      Acs -> "arccos"
-      Snh -> "sinh"
-      Csh -> "cosh"
-      Tnh -> "tanh"
-      Ach -> "arccosh"
-      Ash -> "arcsinh"
-      Ath -> "arctanh"
+      Sin -> "sin"; Cos -> "cos"; Exp -> "exp"; Log -> "log"
+      Tan -> "tan"; Atn -> "arctan"; Asn -> "arcsin"
+      Acs -> "arccos"; Snh -> "sinh"; Csh -> "cosh"; Tnh -> "tanh"
+      Ach -> "arccosh"; Ash -> "arcsinh"; Ath -> "arctanh"
 
-instance (Num a, MathML a) => MathML (VarExpr a) where
-  mlRep = cata (varExpr cstRep mlalg)
-
-mlalg :: MathML a => ExprF a Node -> Node
-mlalg = \case
+mlalg :: MathML a => (vt -> Node) -> ExprF a hv vt Node -> Node
+mlalg vr = \case
     LitF a -> mlRep a
-    NegF x   -> app [symb "minus"   , x   ]
-    SubF x y -> app [symb "minus"   , x, y]
-    AddF x y -> app [symb "plus"    , x, y]
-    DivF x y -> app [symb "divide"  , x, y]
-    MulF x y -> app [symb "times"   , x, y]
-    QutF x y -> app [symb "quotient", x, y]
-    RemF x y -> app [symb "rem"     , x, y]
-    PowF x y -> app [symb "power"   , x, y]
-    AppF f x -> app [mlRep f, x]
-    AbsF   x -> app [NodeElement (Element "abs" [] []), x]
-    SigF   x -> app [NodeElement (Element "signum" [] []), x]
+    VarF a -> vr a
+    NegF x -> app [symb "minus"   , x   ]
+    x :- y -> app [symb "minus"   , x, y]
+    x :+ y -> app [symb "plus"    , x, y]
+    x :/ y -> app [symb "divide"  , x, y]
+    x :* y -> app [symb "times"   , x, y]
+    x :÷ y -> app [symb "quotient", x, y]
+    x :% y -> app [symb "rem"     , x, y]
+    x :^ y -> app [symb "power"   , x, y]
+    f :$ x -> app [mlRep f, x]
+    AbsF x -> app [NodeElement (Element "abs" [] []), x]
+    SigF x -> app [NodeElement (Element "signum" [] []), x]
     where
       app = NodeElement . Element "apply" []
       symb x = NodeElement (Element x [] [])

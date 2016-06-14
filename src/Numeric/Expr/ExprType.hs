@@ -1,6 +1,7 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE TypeFamilies               #-}
+{-# LANGUAGE PatternSynonyms            #-}
 
 module Numeric.Expr.ExprType
   ( Expr(..)
@@ -22,55 +23,64 @@ newtype Expr a =
   Expr { _getExpr :: ExprF a (Expr a)
        } deriving (Eq, Ord)
 
-coerceBi :: (Expr a -> Expr a -> ExprF a (Expr a))
-         -> Expr a -> Expr a -> Expr a
-coerceBi = coerce
+pattern Lit x    = Expr (LitF x)
+pattern x :+: y  = Expr (x :+ y)
+pattern x :*: y  = Expr (x :* y)
+pattern x :-: y  = Expr (x :- y)
+pattern Abs x    = Expr (AbsF x)
+pattern Sig x    = Expr (SigF x)
+pattern Neg x    = Expr (NegF x)
+pattern x ://: y = Expr (x :// y)
+pattern x :%: y  = Expr (x :% y)
+pattern x :/: y  = Expr (x :/ y)
+pattern f :$: x  = Expr (f :$ x)
+pattern x :^: y  = Expr (x :^ y)
 
 instance Wrapped (Expr a) where
   type Unwrapped (Expr a) = ExprF a (Expr a)
-  _Wrapped' = iso _getExpr Expr
+  _Wrapped' = coerced
 
 instance Num a => Num (Expr a) where
-  (+) = coerceBi AddF
-  (*) = coerceBi MulF
-  (-) = coerceBi SubF
-  abs = Expr .# AbsF
-  signum = Expr .# SigF
-  negate = Expr .# NegF
-  fromInteger = Expr .# LitF . fromInteger
+  (+) = (:+:)
+  (*) = (:*:)
+  (-) = (:-:)
+  abs = Abs
+  signum = Sig
+  negate = Neg
+  fromInteger = Lit . fromInteger
 
 instance Real a => Real (Expr a) where
   toRational = toRational . cata evalAlg
 
 instance Enum a => Enum (Expr a) where
-  toEnum = Expr .# LitF . toEnum
+  toEnum = Lit . toEnum
   fromEnum = fromEnum . cata evalAlg
 
 instance Integral a => Integral (Expr a) where
   toInteger = toInteger . cata evalAlg
-  quotRem a b = (coerceBi QutF a b, coerceBi RemF a b)
-  quot = coerceBi QutF
-  rem  = coerceBi RemF
+  quotRem a b = (a ://: b, a :%: b)
+  quot = (://:)
+  rem  = (:%:)
 
 instance Fractional a => Fractional (Expr a) where
-  fromRational = Expr .# LitF . fromRational
-  (/) = coerceBi DivF
+  fromRational = Lit . fromRational
+  (/) = (:/:)
 
 instance Floating a => Floating (Expr a) where
-  pi    = Expr .# LitF $ pi
-  exp   = Expr .# AppF Exp
-  log   = Expr .# AppF Log
-  sin   = Expr .# AppF Sin
-  cos   = Expr .# AppF Cos
-  asin  = Expr .# AppF Asn
-  acos  = Expr .# AppF Acs
-  atan  = Expr .# AppF Atn
-  sinh  = Expr .# AppF Snh
-  cosh  = Expr .# AppF Csh
-  asinh = Expr .# AppF Ash
-  acosh = Expr .# AppF Ach
-  atanh = Expr .# AppF Ath
-  (**) = coerceBi PowF
+  pi    = Lit pi
+  exp   = (:$:) Exp
+  log   = (:$:) Log
+  sin   = (:$:) Sin
+  cos   = (:$:) Cos
+  asin  = (:$:) Asn
+  acos  = (:$:) Acs
+  atan  = (:$:) Atn
+  sinh  = (:$:) Snh
+  cosh  = (:$:) Csh
+  asinh = (:$:) Ash
+  acosh = (:$:) Ach
+  atanh = (:$:) Ath
+  (**)  = (:^:)
 
 type instance Base (Expr a) = ExprF a
 instance Recursive (Expr a) where project = coerce
