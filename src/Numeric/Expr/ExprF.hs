@@ -10,21 +10,43 @@
 {-# LANGUAGE LambdaCase                 #-}
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE StandaloneDeriving         #-}
-{-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
 {-# LANGUAGE PatternSynonyms            #-}
 {-# LANGUAGE ViewPatterns               #-}
 {-# LANGUAGE FlexibleContexts           #-}
-{-# LANGUAGE FunctionalDependencies     #-}
 {-# LANGUAGE RankNTypes                 #-}
 
-module Numeric.Expr.ExprF where
+module Numeric.Expr.ExprF
+  ( ExprF(..)
+  , appF
+  , Func(..)
+  , ExprType(..)
+  , Expr
+  , VarExpr
+  , VarAbility(..)
+  , pattern Lit
+  , pattern Var
+  , pattern (:+:)
+  , pattern (:*:)
+  , pattern (:-:)
+  , pattern Abs
+  , pattern Neg
+  , pattern Sig
+  , pattern (:÷:)
+  , pattern (:%:)
+  , pattern (:/:)
+  , pattern (:$:)
+  , pattern (:^:)
+  , eval
+  , assoc
+  , approxEqual
+  , simplify
+  ) where
 
 import           Control.Lens
 import           Data.Coerce
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
-import           Data.Serialize
 import           GHC.Generics                 (Generic)
 import           Test.QuickCheck
 import           Data.Function
@@ -35,7 +57,6 @@ data Func =
           deriving (Eq, Ord, Enum, Bounded, Generic)
 
 instance Arbitrary Func where arbitrary = arbitraryBoundedEnum
-instance Serialize Func
 
 instance Show Func where
   show = \case
@@ -51,39 +72,46 @@ appF = \case
   Acs -> acos; Ach -> acosh; Ash -> asinh; Ath -> atanh
 
 -- | Kind to represent whether or not an expression can hold variables
-data VarAbility = HasVar | NoVar deriving (Eq, Ord)
+data VarAbility a = HasVar a | NoVar deriving (Eq, Ord)
 
 -- | Unfixed expression type
-data ExprF littype hasvar vartype r where
-  LitF :: n -> ExprF n v t r
-  VarF :: t -> ExprF n 'HasVar t r
+data ExprF littype vartype r where
+  LitF :: n -> ExprF n v r
+  VarF :: Show t => t -> ExprF n ('HasVar t) r
 
   -- Num
-  (:+) :: Num n => r -> r -> ExprF n v t r
-  (:-) :: Num n => r -> r -> ExprF n v t r
-  (:*) :: Num n => r -> r -> ExprF n v t r
-  AbsF :: Num n => r -> ExprF n v t r
-  SigF :: Num n => r -> ExprF n v t r
-  NegF :: Num n => r -> ExprF n v t r
+  (:+) :: Num n => r -> r -> ExprF n v r
+  (:-) :: Num n => r -> r -> ExprF n v r
+  (:*) :: Num n => r -> r -> ExprF n v r
+  AbsF :: Num n => r -> ExprF n v r
+  SigF :: Num n => r -> ExprF n v r
+  NegF :: Num n => r -> ExprF n v r
 
   -- Integral
-  (:÷) :: Integral n => r -> r -> ExprF n v t r
-  (:%) :: Integral n => r -> r -> ExprF n v t r
+  (:÷) :: Integral n => r -> r -> ExprF n v r
+  (:%) :: Integral n => r -> r -> ExprF n v r
 
   -- Fractional
-  (:/) :: Fractional n => r -> r -> ExprF n v t r
+  (:/) :: Fractional n => r -> r -> ExprF n v r
 
   -- Floating
-  (:$) :: Floating n => Func -> r -> ExprF n v t r
-  (:^) :: Floating n => r -> r -> ExprF n v t r
+  (:$) :: Floating n => Func -> r -> ExprF n v r
+  (:^) :: Floating n => r -> r -> ExprF n v r
 
-deriving instance Functor (ExprF n hv vt)
-deriving instance Foldable (ExprF n hv vt)
-deriving instance Traversable (ExprF n hv vt)
-deriving instance (Eq a, Eq vt, Eq r) => Eq (ExprF a hv vt r)
-deriving instance (Ord a, Ord vt, Ord r) => Ord (ExprF a hv vt r)
+deriving instance Functor (ExprF n vt)
+deriving instance Foldable (ExprF n vt)
+deriving instance Traversable (ExprF n vt)
+instance (Eq a, Eq r) => Eq (ExprF a 'NoVar r) where
+  (==) = zipExpr (==) (==) (==) (&&) False
+deriving instance (Eq a, Eq r, Eq v) => Eq (ExprF a ('HasVar v) r)
+instance (Ord a, Ord r) => Ord (ExprF a 'NoVar r) where
+  compare x y =
+    mappend
+      (compare (prec x) (prec y))
+      (zipExpr compare compare compare mappend undefined x y)
+deriving instance (Ord a, Ord r, Ord v) => Ord (ExprF a ('HasVar v) r)
 
-evalAlg :: ExprF n 'NoVar () n -> n
+evalAlg :: ExprF n 'NoVar n -> n
 evalAlg = \case
   LitF a -> a
   x :+ y -> x + y
@@ -100,21 +128,23 @@ evalAlg = \case
 
 -- | Fixed
 
-newtype Expr' lit hasvar vartype = Expr'
-   { getExpr' :: ExprF lit hasvar vartype (Expr' lit hasvar vartype)
-   } deriving (Eq, Ord)
+newtype Expr' lit var = Expr'
+   { getExpr' :: ExprF lit var (Expr' lit var)}
 
-makeWrapped ''Expr'
+deriving instance Eq lit => Eq (Expr' lit 'NoVar)
+deriving instance (Eq lit, Eq var) => Eq (Expr' lit ('HasVar var))
+deriving instance Ord lit => Ord (Expr' lit 'NoVar)
+deriving instance (Ord lit, Ord var) => Ord (Expr' lit ('HasVar var))
 
-instance Plated (Expr' lit hasvar vartype) where
-  plate = _Wrapped'.traversed
-instance ExprType (Expr' lit hasvar vartype) where _Expr = coerced
-type instance Base (Expr' lit hasvar vartype) =
-  ExprF lit hasvar vartype
-instance Recursive (Expr' lit hasvar vartype) where project = getExpr'
-instance Corecursive (Expr' lit hasvar vartype) where embed = Expr'
 
-instance Num lit => Num (Expr' lit hv vt) where
+instance Plated (Expr' lit var) where
+  plate f (Expr' e) = Expr' <$> traverse f e
+instance ExprType (Expr' lit var) where _Expr = coerced
+type instance Base (Expr' lit var) = ExprF lit var
+instance Recursive (Expr' lit var) where project = getExpr'
+instance Corecursive (Expr' lit var) where embed = Expr'
+
+instance Num lit => Num (Expr' lit var) where
   (+) = (:+:)
   (*) = (:*:)
   (-) = (:-:)
@@ -123,24 +153,24 @@ instance Num lit => Num (Expr' lit hv vt) where
   negate = Neg
   fromInteger = Lit . fromInteger
 
-instance Real a => Real (Expr' a 'NoVar ()) where
-  toRational = toRational . cata evalAlg
+instance Real a => Real (Expr' a 'NoVar) where
+  toRational = toRational . eval
 
-instance Enum a => Enum (Expr' a 'NoVar ()) where
+instance Enum a => Enum (Expr' a 'NoVar) where
   toEnum = Lit . toEnum
-  fromEnum = fromEnum . cata evalAlg
+  fromEnum = fromEnum . eval
 
-instance Integral a => Integral (Expr' a 'NoVar ()) where
-  toInteger = toInteger . cata evalAlg
+instance Integral a => Integral (Expr' a 'NoVar) where
+  toInteger = toInteger . eval
   quotRem x y = (x :÷: y, x :%: y)
   quot = (:÷:)
   rem = (:%:)
 
-instance Fractional a => Fractional (Expr' a hv vt) where
+instance Fractional a => Fractional (Expr' a v) where
   fromRational = Lit . fromRational
   (/) = (:/:)
 
-instance Floating a => Floating (Expr' a hv vt) where
+instance Floating a => Floating (Expr' a v) where
   pi    = Lit pi
   exp   = (:$:) Exp
   log   = (:$:) Log
@@ -156,8 +186,7 @@ instance Floating a => Floating (Expr' a hv vt) where
   atanh = (:$:) Ath
   (**) = (:^:)
 
-
-pprAlg :: (Show a, Show vt) => ExprF a hv vt (Int, ShowS) -> ShowS
+pprAlg :: (Show a) => ExprF a v (Int, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a -> shows a
   VarF a -> shows a
@@ -176,73 +205,37 @@ pprAlg e = case e of
     parL = uncurry $ showParen . (prec e > )
     parR = uncurry $ showParen . (prec e >=)
 
-prec :: ExprF a hv vt r -> Int
+prec :: ExprF a v r -> Int
 prec = \case
   LitF _ -> 11; VarF _ -> 11; AbsF _ -> 10; SigF _ -> 10; _ :$ _ -> 10;
   _ :^ _ -> 8; _ :÷ _ -> 7; _ :% _ -> 7; _ :/ _ -> 7; _ :* _ -> 7
   _ :+ _ -> 6; _ :- _ -> 6; NegF _ -> 0
 
-instance (Show a, Show v) => Show (Expr' a hv v) where
+instance (Show a) => Show (Expr' a v) where
   showsPrec _ = zygo prec pprAlg
 
-litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a hv vt r)]
-litArb = const [LitF . abs <$> arbitrary]
-
-numArb :: Num a => r -> [Gen (ExprF a hv vt r)]
-numArb r = map pure
-  [ r :+ r, r :- r, r :* r
-  , AbsF r, SigF r, NegF r ]
-
-intArb :: Integral a => r -> [Gen (ExprF a hv vt r)]
-intArb r = map pure [r :÷ r, r :% r]
-
-fracArb :: Fractional a => r -> [Gen (ExprF a hv vt r)]
-fracArb r = [ pure (r :/ r) ]
-
-floatArb :: Floating a => r -> [Gen (ExprF a hv vt r)]
-floatArb r = [ pure $ r :^ r, flip (:$) r <$> arbitrary ]
-
-varArb :: Arbitrary vt => r -> [Gen (ExprF a 'HasVar vt r)]
-varArb = const [VarF <$> arbitrary]
-
-instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
-  arbitrary = sized (anaM alg) where
-    alg 0 = oneof $ litArb 0
-    alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r where
-      r = n `div` 2
-
-instance (Floating a, Arbitrary a) => Arbitrary (VarExpr a) where
-  arbitrary = sized (anaM alg) where
-    alg 0 = oneof $ litArb 0 ++ varArb 0
-    alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r ++ varArb r where
-      r = n `div` 2
-
 type family LitType e
-type family VarPresent e :: VarAbility
-type family VarType e
+type family VarType e :: VarAbility *
 
 type instance LitType (Expr a) = a
-type instance VarPresent (Expr a) = 'NoVar
-type instance VarType (Expr a) = ()
+type instance VarType (Expr a) = 'NoVar
 
 type instance LitType (VarExpr a) = a
-type instance VarPresent (VarExpr a) = 'HasVar
-type instance VarType (VarExpr a) = String
+type instance VarType (VarExpr a) = 'HasVar String
 
-type instance LitType (Expr' a hv vt) = a
-type instance VarPresent (Expr' a hv vt) = hv
-type instance VarType (Expr' a hv vt) = vt
+type instance LitType (Expr' a v) = a
+type instance VarType (Expr' a v) = v
 
 class ( Plated e
       , Recursive e
       , Corecursive e
-      , Base e ~ ExprF (LitType e) (VarPresent e) (VarType e)
+      , Base e ~ ExprF (LitType e) (VarType e)
       ) => ExprType e where
-  _Expr :: Iso' e (ExprF (LitType e) (VarPresent e) (VarType e) e)
+  _Expr :: Iso' e (ExprF (LitType e) (VarType e) e)
 
 
 newtype Expr a = Expr
-  { getExpr :: Expr' a 'NoVar ()
+  { getExpr :: Expr' a 'NoVar
   } deriving (Eq, Ord, Num, Real, Enum, Integral, Fractional, Floating)
 
 instance Show a => Show (Expr a) where
@@ -252,12 +245,12 @@ instance ExprType (Expr a) where
   _Expr = coerced
 
 instance Plated (Expr a) where plate = _Expr.traversed
-type instance Base (Expr a) = ExprF a 'NoVar ()
+type instance Base (Expr a) = ExprF a 'NoVar
 instance Recursive (Expr a) where project = coerce
 instance Corecursive (Expr a) where embed = coerce
 
 newtype VarExpr a = VarExpr
-  { getVarExpr :: Expr' a 'HasVar String
+  { getVarExpr :: Expr' a ('HasVar String)
   } deriving (Eq, Ord, Num, Fractional, Floating)
 
 instance Show a => Show (VarExpr a) where
@@ -265,7 +258,7 @@ instance Show a => Show (VarExpr a) where
 
 instance ExprType (VarExpr a) where _Expr = coerced
 instance Plated (VarExpr a) where plate = _Expr.traversed
-type instance Base (VarExpr a) = ExprF a 'HasVar String
+type instance Base (VarExpr a) = ExprF a ('HasVar String)
 instance Recursive (VarExpr a) where project = coerce
 instance Corecursive (VarExpr a) where embed = coerce
 
@@ -304,19 +297,43 @@ assoc = rewrite $ \case
 
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
 approxEqual eq = zipo (~=) `on` assoc where
-  LitF a ~= LitF b = eq a b
-  (w :+ x) ~= (y :+ z) = w y && x z
-  (w :- x) ~= (y :- z) = w y && x z
-  (w :^ x) ~= (y :^ z) = w y && x z
-  (w :* x) ~= (y :* z) = w y && x z
-  AbsF x ~= AbsF y = x y
-  SigF x ~= SigF y = x y
-  NegF x ~= NegF y = x y
-  (w :÷ x) ~= (y :÷ z) = w y && x z
-  (w :% x) ~= (y :% z) = w y && x z
-  (w :/ x) ~= (y :/ z) = w y && x z
-  (w :$ x) ~= (y :$ z) = w == y && x z
-  _ ~= _ = False
+  (~=) = zipExpr eq (==) ($) (&&) False
+
+-- zipVarExpr :: (lit -> lit -> res)
+--            -> (var -> var -> res)
+--            -> (Func -> Func -> res)
+--            -> (ra -> rb -> res)
+--            -> (res -> res -> res)
+--            -> res
+--            -> ExprF lit ('HasVar var) ra
+--            -> ExprF lit ('HasVar var) rb
+--            -> res
+-- zipVarExpr l v f r c d = (~=) where
+--   VarF a ~= VarF b = v a b
+--   x ~= y = zipExpr l f r c d x y
+
+zipExpr :: (lit -> lit -> res)
+        -> (Func -> Func -> res)
+        -> (ra -> rb -> res)
+        -> (res -> res -> res)
+        -> res
+        -> ExprF lit v ra
+        -> ExprF lit v rb
+        -> res
+zipExpr l f r c d = (~=) where
+  LitF a ~= LitF b = l a b
+  (w :+ x) ~= (y :+ z) = r w y `c` r x z
+  (w :- x) ~= (y :- z) = r w y `c` r x z
+  (w :^ x) ~= (y :^ z) = r w y `c` r x z
+  (w :* x) ~= (y :* z) = r w y `c` r x z
+  AbsF x ~= AbsF y = r x y
+  SigF x ~= SigF y = r x y
+  NegF x ~= NegF y = r x y
+  (w :÷ x) ~= (y :÷ z) = r w y `c` r x z
+  (w :% x) ~= (y :% z) = r w y `c` r x z
+  (w :/ x) ~= (y :/ z) = r w y `c` r x z
+  (w :$ x) ~= (y :$ z) = f w y `c` r x z
+  _ ~= _ = d
 
 simplify :: (ExprType e, Eq e, Num e) => e -> e
 simplify = rewrite $ \case
@@ -338,5 +355,37 @@ simplify = rewrite $ \case
   x :÷: y | x == y -> Just $ Lit 1
   _ -> Nothing
 
-flatten :: Expr (Expr a) -> Expr a
-flatten = cata evalAlg
+eval :: (ExprType e, VarType e ~ 'NoVar) => e -> LitType e
+eval = cata evalAlg
+
+litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a v r)]
+litArb = const [LitF . abs <$> arbitrary]
+
+numArb :: Num a => r -> [Gen (ExprF a v r)]
+numArb r = map pure
+  [ r :+ r, r :- r, r :* r
+  , AbsF r, SigF r, NegF r ]
+
+-- intArb :: Integral a => r -> [Gen (ExprF a v r)]
+-- intArb r = map pure [r :÷ r, r :% r]
+
+fracArb :: Fractional a => r -> [Gen (ExprF a v r)]
+fracArb r = [ pure (r :/ r) ]
+
+floatArb :: Floating a => r -> [Gen (ExprF a v r)]
+floatArb r = [ pure $ r :^ r, flip (:$) r <$> arbitrary ]
+
+varArb :: (Show vt, Arbitrary vt) => r -> [Gen (ExprF a ('HasVar vt) r)]
+varArb = const [VarF <$> arbitrary]
+
+instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
+  arbitrary = sized (anaM alg) where
+    alg 0 = oneof $ litArb 0
+    alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r where
+      r = n `div` 2
+
+instance (Floating a, Arbitrary a) => Arbitrary (VarExpr a) where
+  arbitrary = sized (anaM alg) where
+    alg 0 = oneof $ litArb 0 ++ varArb 0
+    alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r ++ varArb r where
+      r = n `div` 2

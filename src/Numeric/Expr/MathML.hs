@@ -26,7 +26,10 @@ instance MathML Integer where mlRep = cstRep . show
 instance MathML Float   where mlRep = cstRep . show
 
 instance MathML a => MathML (Expr a) where mlRep = cata (mlalg undefined)
-instance MathML a => MathML (VarExpr a) where mlRep = cata (mlalg cstRep)
+instance MathML a => MathML (VarExpr a) where
+  mlRep = cata $ \case
+    VarF x -> cstRep x
+    e -> mlalg undefined e
 
 instance MathML Func where
   mlRep f = NodeElement (Element n [] []) where
@@ -36,10 +39,10 @@ instance MathML Func where
       Acs -> "arccos"; Snh -> "sinh"; Csh -> "cosh"; Tnh -> "tanh"
       Ach -> "arccosh"; Ash -> "arcsinh"; Ath -> "arctanh"
 
-mlalg :: MathML a => (vt -> Node) -> ExprF a hv vt Node -> Node
-mlalg vr = \case
+mlalg :: MathML a => Node -> ExprF a v Node -> Node
+mlalg d = \case
+    VarF _ -> d
     LitF a -> mlRep a
-    VarF a -> vr a
     NegF x -> app [symb "minus"   , x   ]
     x :- y -> app [symb "minus"   , x, y]
     x :+ y -> app [symb "plus"    , x, y]
