@@ -19,6 +19,12 @@ prop_ApproxEq e = approxEqual (==) e e
 prop_Cmp :: Expr Double -> Bool
 prop_Cmp e = compare e e == EQ
 
+prop_Ord :: Expr Double -> Expr Double -> Bool
+prop_Ord x y = case compare x y of
+  LT -> x < y
+  EQ -> x == y
+  GT -> x > y
+
 prop_Add, prop_Mul, prop_Sub :: IntExpr Integer -> IntExpr Integer -> Bool
 prop_Add = testOp (+)
 prop_Mul = testOp (*)
