@@ -57,17 +57,18 @@ pprAlg e = case e of
 brcAlg :: (Show a, RealFrac a) => ExprF a 'NoVar ShowS -> ShowS
 brcAlg = \case
   LitF a -> shows (floor a :: Integer)
-  NegF x -> showString "-" . showParen True x
-  x :+ y -> showParen True x . showString " + " . showParen True y
-  x :- y -> showParen True x . showString " - " . showParen True y
-  x :/ y -> showParen True x . showString " / " . showParen True y
-  x :* y -> showParen True x . showString " * " . showParen True y
-  x :^ y -> showParen True x . showString " ^ " . showParen True y
-  f :$ x -> shows f . showChar ' ' . showParen True x
-  AbsF x -> showString "abs " . showParen True x
-  SigF x -> showString "signum " . showParen True x
-  x :÷ y -> showParen True x . showString " // " . showParen True y
-  x :% y -> showParen True x . showString " % "  . showParen True y
+  NegF x -> showString "-" . sp x
+  x :+ y -> sp x . showString " + " . sp y
+  x :- y -> sp x . showString " - " . sp y
+  x :/ y -> sp x . showString " / " . sp y
+  x :* y -> sp x . showString " * " . sp y
+  x :^ y -> sp x . showString " ^ " . sp y
+  f :$ x -> shows f . showChar ' ' . sp x
+  AbsF x -> showString "abs " . sp x
+  SigF x -> showString "signum " . sp x
+  x :÷ y -> sp x . showString " // " . sp y
+  x :% y -> sp x . showString " % "  . sp y
+  where sp = showParen True
 
 prec :: ExprF a v r -> Int
 prec = \case

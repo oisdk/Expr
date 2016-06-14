@@ -47,3 +47,15 @@ exprStyle =
     (fromList $ ["abs","signum","negate"] ++ map show allFuncs)
     Identifier
     Identifier
+
+intTable :: (Monad m, TokenParsing m) => [[Operator m (IntExpr Integer)]]
+intTable =
+  [ [prefix "abs" abs, prefix "signum" signum, prefix "negate" negate]
+  , [prefix "-" negate, prefix "+" id]
+  , [binary "*" (*) AssocLeft, binary "%" rem AssocLeft, binary "÷" quot AssocLeft]
+  , [binary "+" (+) AssocLeft, binary "-" (-) AssocLeft] ]
+
+intParse :: (Monad m, TokenParsing m) => m (IntExpr Integer)
+intParse = buildExpressionParser intTable term <?> "expression" where
+  term = parens intParse <|> number <?> "simple expression"
+  number = fromInteger <$> natural
