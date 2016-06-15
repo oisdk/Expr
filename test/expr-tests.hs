@@ -23,9 +23,13 @@ prop_Cmp e = compare e e == EQ
 
 prop_Ord :: Expr Double -> Expr Double -> Bool
 prop_Ord x y = case compare x y of
-  LT -> x < y
-  EQ -> x == y
-  GT -> x > y
+  LT -> lt && not eq && not gt
+  EQ -> not lt && eq && not gt
+  GT -> not lt && not eq && gt
+  where
+    lt = x <  y
+    eq = x == y
+    gt = x >  y
 
 prop_Add, prop_Mul, prop_Sub :: IntExpr Integer -> IntExpr Integer -> Bool
 prop_Add = testOp (+)
@@ -38,7 +42,7 @@ prop_Sig = testFn signum
 prop_Neg = testFn negate
 
 prop_Parse :: Expr Double -> P.Result
-prop_Parse e = case parseString (exprParse) mempty (show e) of
+prop_Parse e = case parseString exprParse mempty (show e) of
   T.Success r -> if (approxEqual (\x y -> abs (x-y) < 0.1) e r) then P.succeeded else
     failWith ("\nExpected: " ++ showBrack e ++ "\nReceived: " ++ showBrack r)
   T.Failure d -> failWith (show d)

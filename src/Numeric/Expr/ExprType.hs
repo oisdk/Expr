@@ -13,6 +13,8 @@ module Numeric.Expr.ExprType
   , VarExpr
   , IntExpr(..)
   , ExprType(..)
+  , LitType
+  , VarType
   , pattern Lit
   , pattern Var
   , pattern (:+:)
