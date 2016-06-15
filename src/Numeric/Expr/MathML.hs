@@ -17,6 +17,9 @@ import           Numeric.Expr.ExprType
 import           Text.Taggy.DOM
 import           Text.Taggy.Renderer
 
+-- | A class for generating mathml
+-- >>> L.unpack . renderWith True . mlRep $ (1 + 2 - 3 :: Expr Int)
+-- "<apply><minus></minus><apply><plus></plus><ci>1</ci><ci>2</ci></apply><ci>3</ci></apply>"
 class MathML a where mlRep :: a -> Node
 
 cstRep :: String -> Node

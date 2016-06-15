@@ -108,5 +108,12 @@ return []
 runTests = $forAllProperties quickCheckExit
 
 main = do
-  doctest ["-isrc", "src/Numeric/Expr.hs", "src/Numeric/Expr/ExprType.hs"]
+  doctest
+    [ "-isrc"
+    , "src/Numeric/Expr.hs"
+    , "src/Numeric/Expr/ExprType.hs"
+    , "src/Numeric/Expr/Algs.hs"
+    , "src/Numeric/Expr/MathML.hs"
+    , "src/Numeric/Expr/ExprF.hs"
+    , "src/Numeric/Expr/Parse.hs"]
   runTests
