@@ -1,21 +1,24 @@
-{-# LANGUAGE DataKinds                  #-}
-{-# LANGUAGE DeriveFoldable             #-}
-{-# LANGUAGE DeriveFunctor              #-}
-{-# LANGUAGE DeriveTraversable          #-}
-{-# LANGUAGE FlexibleInstances          #-}
-{-# LANGUAGE GADTs                      #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
-{-# LANGUAGE LambdaCase                 #-}
-{-# LANGUAGE StandaloneDeriving         #-}
+{-# LANGUAGE DataKinds          #-}
+{-# LANGUAGE DeriveFoldable     #-}
+{-# LANGUAGE DeriveFunctor      #-}
+{-# LANGUAGE DeriveTraversable  #-}
+{-# LANGUAGE FlexibleInstances  #-}
+{-# LANGUAGE GADTs              #-}
+{-# LANGUAGE LambdaCase         #-}
+{-# LANGUAGE StandaloneDeriving #-}
 
 module Numeric.Expr.ExprF
   ( ExprF(..)
   , Func(..)
   , VarAbility(..)
   , zipExpr
+  , _NoVar
+  , _VarF
+  , _LitF
   , getVar
   ) where
 
+import           Control.Lens
 import           Test.QuickCheck
 
 data Func =
@@ -71,41 +74,13 @@ instance (Ord a, Ord r) => Ord (ExprF a 'NoVar r) where
       (compare (prec x) (prec y))
       (zipExpr compare compare compare mappend undefined x y)
 deriving instance (Ord a, Ord r, Ord v) => Ord (ExprF a ('HasVar v) r)
-
-getVar :: ExprF l ('HasVar a) r -> Either a (ExprF l 'NoVar r)
-getVar = \case
-  LitF x -> Right $ LitF x
-  VarF x -> Left x
-  x :+ y -> Right $ x :+ y
-  x :- y -> Right $ x :- y
-  x :* y -> Right $ x :* y
-  AbsF x -> Right $ AbsF x
-  SigF x -> Right $ SigF x
-  NegF x -> Right $ NegF x
-  x :÷ y -> Right $ x :÷ y
-  x :% y -> Right $ x :% y
-  x :/ y -> Right $ x :/ y
-  x :$ y -> Right $ x :$ y
-  x :^ y -> Right $ x :^ y
+deriving instance (Show a, Show v, Show r) => Show (ExprF a ('HasVar v) r)
 
 prec :: ExprF l v r -> Int
 prec = \case
   LitF _ -> 12; VarF _ -> 11; _ :+ _ -> 10; _ :- _ -> 9; _ :* _ -> 8
   AbsF _ -> 7; SigF _ -> 6; NegF _ -> 5; _ :÷ _ -> 4; _ :% _ -> 3
   _ :/ _ -> 2; _ :$ _ -> 1; _ :^ _ -> 0
-
--- zipVarExpr :: (lit -> lit -> res)
---            -> (var -> var -> res)
---            -> (Func -> Func -> res)
---            -> (ra -> rb -> res)
---            -> (res -> res -> res)
---            -> res
---            -> ExprF lit ('HasVar var) ra
---            -> ExprF lit ('HasVar var) rb
---            -> res
--- zipVarExpr l v f r c d = (~=) where
---   VarF a ~= VarF b = v a b
---   x ~= y = zipExpr l f r c d x y
 
 zipExpr :: (lit -> lit -> res)
         -> (Func -> Func -> res)
@@ -129,3 +104,44 @@ zipExpr l f r c d = (~=) where
   (w :/ x) ~= (y :/ z) = r w y `c` r x z
   (w :$ x) ~= (y :$ z) = f w y `c` r x z
   _ ~= _ = d
+
+_VarF :: Show b => Prism (ExprF l ('HasVar a) r) (ExprF l ('HasVar b) r) a b
+_VarF = prism VarF toVar where
+  toVar = either Right (Left . review _NoVar) . getVar
+
+_NoVar :: Prism' (ExprF l ('HasVar v) r) (ExprF l 'NoVar r)
+_NoVar = prism' toVar fromVar where
+  toVar :: ExprF l 'NoVar r -> ExprF l ('HasVar v) r
+  toVar = \case
+    LitF x -> LitF x
+    x :+ y -> x :+ y
+    x :- y -> x :- y
+    x :* y -> x :* y
+    AbsF x -> AbsF x
+    SigF x -> SigF x
+    NegF x -> NegF x
+    x :÷ y -> x :÷ y
+    x :% y -> x :% y
+    x :/ y -> x :/ y
+    x :$ y -> x :$ y
+    x :^ y -> x :^ y
+  fromVar = either (const Nothing) Just . getVar
+
+getVar :: ExprF l ('HasVar v) r -> Either v (ExprF l 'NoVar r)
+getVar = \case
+  VarF x -> Left x
+  LitF x -> Right $ LitF x
+  x :+ y -> Right $ x :+ y
+  x :- y -> Right $ x :- y
+  x :* y -> Right $ x :* y
+  AbsF x -> Right $ AbsF x
+  SigF x -> Right $ SigF x
+  NegF x -> Right $ NegF x
+  x :÷ y -> Right $ x :÷ y
+  x :% y -> Right $ x :% y
+  x :/ y -> Right $ x :/ y
+  x :$ y -> Right $ x :$ y
+  x :^ y -> Right $ x :^ y
+
+_LitF :: Prism' (ExprF l v r) l
+_LitF = prism' LitF $ \case LitF x -> Just x; _ -> Nothing

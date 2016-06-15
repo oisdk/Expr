@@ -208,7 +208,8 @@ approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
 approxEqual eq = zipo (~=) `on` assoc where
   (~=) = zipExpr eq (==) ($) (&&) False
 
-varApproxEqual :: (ExprType e, VarType e ~ 'HasVar v, Eq v) => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
+varApproxEqual :: (ExprType e, VarType e ~ 'HasVar v, Eq v)
+               => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
 varApproxEqual eq = zipo (~=) `on` assoc where
   VarF x ~= VarF y = x == y
   x ~= y = zipExpr eq (==) ($) (&&) False x y
@@ -221,16 +222,16 @@ simplify = rewrite $ \case
   1 :*: x -> Just x
   x :*: 1 -> Just x
   x :^: 1 -> Just x
-  1 :^: _ -> Just $ Lit 1
-  _ :^: 0 -> Just $ Lit 1
-  0 :*: _ -> Just $ Lit 0
-  _ :*: 0 -> Just $ Lit 0
-  _ :%: 1 -> Just $ Lit 0
-  Neg 0   -> Just $ Lit 0
-  x :-: y | x == y -> Just $ Lit 0
-  x :/: y | x == y -> Just $ Lit 1
-  x :%: y | x == y -> Just $ Lit 0
-  x :÷: y | x == y -> Just $ Lit 1
+  1 :^: _ -> Just (Lit 1)
+  _ :^: 0 -> Just (Lit 1)
+  0 :*: _ -> Just (Lit 0)
+  _ :*: 0 -> Just (Lit 0)
+  _ :%: 1 -> Just (Lit 0)
+  Neg 0   -> Just (Lit 0)
+  x :-: y | x == y -> Just (Lit 0)
+  x :/: y | x == y -> Just (Lit 1)
+  x :%: y | x == y -> Just (Lit 0)
+  x :÷: y | x == y -> Just (Lit 1)
   _ -> Nothing
 
 eval :: (ExprType e, VarType e ~ 'NoVar) => e -> LitType e
@@ -261,12 +262,13 @@ instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
     alg n = oneof $ litArb r ++ numArb r ++ intArb r where
       r = n `div` 2
 
-getVars :: (ExprType e, VarType e ~ 'HasVar a) => e -> [a]
-getVars = cata (either pure concat . getVar)
+getVars :: (ExprType e, VarType e ~ 'HasVar a, Show a) => e -> [a]
+getVars = toListOf (cosmos._Expr._VarF)
 
 repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
         => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
-repVars f = cataM (either f (pure.embed) . getVar)
+repVars f = cataM alg where
+  alg = either f (pure.embed) . getVar
 
 showBrack :: (a -> String) -> Expr a -> String
 showBrack s e = cata (brcAlg s) e ""
