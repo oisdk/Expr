@@ -108,7 +108,7 @@ instance Floating a => Floating (Expr' a v) where
   (**)  = (:^:)
 
 instance (Show a) => Show (Expr' a v) where
-  showsPrec _ = zygo prec pprAlg
+  showsPrec _ = zygo prec pprAlg . assoc
 
 type family LitType e
 type family VarType e :: VarAbility *
@@ -201,8 +201,6 @@ assoc = rewrite $ \case
   x :*: (y :/: z) -> Just $ (x :*: y) :/: z
   x :+: (y :-: z) -> Just $ (x :+: y) :-: z
   x :+: (y :+: z) -> Just $ (x :+: y) :+: z
-  x :%: (y :%: z) -> Just $ (x :%: y) :%: z
-  x :÷: (y :÷: z) -> Just $ (x :÷: y) :÷: z
   _               -> Nothing
 
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool

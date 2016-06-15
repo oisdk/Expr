@@ -48,8 +48,8 @@ prop_Parse = testParse exprParse show (showBrack roundShow) (approxEqual (\x y -
 prop_ParseVar :: VarExpr Double -> P.Result
 prop_ParseVar = testParse varParse show (showBrackVar roundShow) (varApproxEqual (\x y -> abs (x-y) < 0.1))
 
--- prop_ParseInt :: IntExpr Integer -> P.Result
--- prop_ParseInt (IntExpr e) = testParse intParse show (showBrack show) (approxEqual (==)) e
+prop_ParseInt :: IntExpr Integer -> P.Result
+prop_ParseInt (IntExpr e) = testParse intParse show (showBrack show) (approxEqual (==)) e
 
 roundShow :: Double -> String
 roundShow = show . (floor :: Double -> Integer)
