@@ -130,18 +130,18 @@ _NoVar = prism' toVar fromVar where
 getVar :: ExprF l ('HasVar v) r -> Either v (ExprF l 'NoVar r)
 getVar = \case
   VarF x -> Left x
-  LitF x -> Right $ LitF x
-  x :+ y -> Right $ x :+ y
-  x :- y -> Right $ x :- y
-  x :* y -> Right $ x :* y
-  AbsF x -> Right $ AbsF x
-  SigF x -> Right $ SigF x
-  NegF x -> Right $ NegF x
-  x :÷ y -> Right $ x :÷ y
-  x :% y -> Right $ x :% y
-  x :/ y -> Right $ x :/ y
-  x :$ y -> Right $ x :$ y
-  x :^ y -> Right $ x :^ y
+  LitF x -> Right (LitF x)
+  x :+ y -> Right (x :+ y)
+  x :- y -> Right (x :- y)
+  x :* y -> Right (x :* y)
+  AbsF x -> Right (AbsF x)
+  SigF x -> Right (SigF x)
+  NegF x -> Right (NegF x)
+  x :÷ y -> Right (x :÷ y)
+  x :% y -> Right (x :% y)
+  x :/ y -> Right (x :/ y)
+  x :$ y -> Right (x :$ y)
+  x :^ y -> Right (x :^ y)
 
 _LitF :: Prism' (ExprF l v r) l
 _LitF = prism' LitF $ \case LitF x -> Just x; _ -> Nothing
