@@ -155,6 +155,7 @@ newtype VarString = VarString
 
 instance Show VarString where show = getVarString
 instance IsString VarString where fromString = VarString
+instance IsString (VarExpr a) where fromString = Var . fromString
 instance Arbitrary VarString where
   arbitrary = VarString <$> ((:) <$> elements starts <*> listOf (elements ends)) where
     starts = ['a'..'z'] ++ ['A'..'Z']
@@ -214,6 +215,14 @@ varApproxEqual eq = zipo (~=) `on` assoc where
   VarF x ~= VarF y = x == y
   x ~= y = zipExpr eq (==) ($) (&&) False x y
 
+-- | Does some (very basic) simplification
+-- >>> :set -XOverloadedStrings
+-- >>> simplify (1 + 0 :: Expr Int)
+-- 1
+--
+-- >>> simplify ("x" * 0 :: VarExpr Int)
+-- 0
+
 simplify :: (ExprType e, Eq e, Num e) => e -> e
 simplify = rewrite $ \case
   x :+: 0 -> Just x
@@ -236,6 +245,11 @@ simplify = rewrite $ \case
 
 eval :: (ExprType e, VarType e ~ 'NoVar) => e -> LitType e
 eval = cata evalAlg
+
+-- | Avoids zero - division errors
+--
+-- >>> safeEval (1 / 0 :: Expr Double)
+-- Nothing
 
 safeEval :: (ExprType e, VarType e ~ 'NoVar, Eq (LitType e)) => e -> Maybe (LitType e)
 safeEval = cataM safeEvalAlg
@@ -261,6 +275,12 @@ instance (Integral a, Arbitrary a) => Arbitrary (IntExpr a) where
     alg 0 = oneof $ litArb 0
     alg n = oneof $ litArb r ++ numArb r ++ intArb r where
       r = n `div` 2
+
+-- | Extracts the variables from an expression
+--
+-- >>> :set -XOverloadedStrings
+-- >>> getVars (1 + "a" - 4 - "b" :: VarExpr Int)
+-- [a,b]
 
 getVars :: (ExprType e, VarType e ~ 'HasVar a, Show a) => e -> [a]
 getVars = toListOf (cosmos._Expr._VarF)

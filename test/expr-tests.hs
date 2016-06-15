@@ -12,6 +12,7 @@ import qualified Test.QuickCheck.Property as P
 import           Text.Parser.Combinators
 import           Text.Trifecta.Parser
 import qualified Text.Trifecta.Result     as T
+import           Test.DocTest
 
 prop_ApproxEq :: Expr Double -> Bool
 prop_ApproxEq e = approxEqual (==) e e
@@ -106,4 +107,6 @@ failWith r = P.failed { P.reason = r }
 return []
 runTests = $forAllProperties quickCheckExit
 
-main = runTests
+main = do
+  doctest ["-isrc", "src/Numeric/Expr.hs", "src/Numeric/Expr/ExprType.hs"]
+  runTests
