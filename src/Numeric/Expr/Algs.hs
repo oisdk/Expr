@@ -93,5 +93,5 @@ fracArb r = [ pure (r :/ r) ]
 floatArb :: Floating a => r -> [Gen (ExprF a v r)]
 floatArb r = [ pure $ r :^ r, flip (:$) r <$> arbitrary ]
 
-varArb :: (Show vt, Arbitrary vt) => r -> [Gen (ExprF a ('HasVar vt) r)]
+varArb :: (Show v, Arbitrary v) => r -> [Gen (ExprF a ('HasVar v) r)]
 varArb = const [VarF <$> arbitrary]

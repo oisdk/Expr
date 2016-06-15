@@ -29,7 +29,7 @@ instance MathML Float   where mlRep = cstRep . show
 
 instance MathML a => MathML (Expr a) where mlRep = cata mlalg
 instance MathML a => MathML (VarExpr a) where
-  mlRep = cata (either cstRep mlalg . getVar)
+  mlRep = cata (either (cstRep.show) mlalg . getVar)
 
 instance MathML Func where
   mlRep f = NodeElement (Element n [] []) where

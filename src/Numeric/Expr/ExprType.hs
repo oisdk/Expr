@@ -36,13 +36,16 @@ module Numeric.Expr.ExprType
   , getVars
   , repVars
   , showBrack
+  , showBrackVar
+  , varApproxEqual
   ) where
 
-import           Control.Lens
+import           Control.Lens                 hiding (elements)
 import           Data.Coerce
 import           Data.Function
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
+import           GHC.Exts
 import           Numeric.Expr.Algs
 import           Numeric.Expr.ExprF
 import           Test.QuickCheck
@@ -114,7 +117,7 @@ type instance LitType (Expr a) = a
 type instance VarType (Expr a) = 'NoVar
 
 type instance LitType (VarExpr a) = a
-type instance VarType (VarExpr a) = 'HasVar String
+type instance VarType (VarExpr a) = 'HasVar VarString
 
 type instance LitType (Expr' a v) = a
 type instance VarType (Expr' a v) = v
@@ -142,15 +145,26 @@ instance Recursive (Expr a) where project = coerce
 instance Corecursive (Expr a) where embed = coerce
 
 newtype VarExpr a = VarExpr
-  { getVarExpr :: Expr' a ('HasVar String)
+  { getVarExpr :: Expr' a ('HasVar VarString)
   } deriving (Eq, Ord, Num, Fractional, Floating)
+
+newtype VarString = VarString
+  { getVarString :: String
+  } deriving (Eq, Ord)
+
+instance Show VarString where show = getVarString
+instance IsString VarString where fromString = VarString
+instance Arbitrary VarString where
+  arbitrary = VarString <$> ((:) <$> elements starts <*> listOf (elements ends)) where
+    starts = ['a'..'z'] ++ ['A'..'Z']
+    ends = starts ++ ['0'..'9']
 
 instance Show a => Show (VarExpr a) where
   show = show . getVarExpr
 
 instance ExprType (VarExpr a) where _Expr = coerced
 instance Plated (VarExpr a) where plate = _Expr.traversed
-type instance Base (VarExpr a) = ExprF a ('HasVar String)
+type instance Base (VarExpr a) = ExprF a ('HasVar VarString)
 instance Recursive (VarExpr a) where project = coerce
 instance Corecursive (VarExpr a) where embed = coerce
 
@@ -192,6 +206,11 @@ assoc = rewrite $ \case
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
 approxEqual eq = zipo (~=) `on` assoc where
   (~=) = zipExpr eq (==) ($) (&&) False
+
+varApproxEqual :: (ExprType e, VarType e ~ 'HasVar v, Eq v) => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
+varApproxEqual eq = zipo (~=) `on` assoc where
+  VarF x ~= VarF y = x == y
+  x ~= y = zipExpr eq (==) ($) (&&) False x y
 
 simplify :: (ExprType e, Eq e, Num e) => e -> e
 simplify = rewrite $ \case
@@ -250,3 +269,7 @@ repVars f = cataM (either f (pure.embed) . getVar)
 
 showBrack :: (RealFrac a, Show a) => Expr a -> String
 showBrack e = cata brcAlg e ""
+
+showBrackVar :: (RealFrac a, Show a) => VarExpr a -> String
+showBrackVar e = cata alg e "" where
+  alg = either (shows.show) brcAlg . getVar

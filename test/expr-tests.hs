@@ -10,6 +10,7 @@ import           System.Exit
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Property as P
 import Text.Trifecta.Parser
+import Text.Parser.Combinators
 import qualified Text.Trifecta.Result as T
 
 prop_Eq :: Expr Double -> Bool
@@ -42,10 +43,16 @@ prop_Sig = testFn signum
 prop_Neg = testFn negate
 
 prop_Parse :: Expr Double -> P.Result
-prop_Parse e = case parseString exprParse mempty (show e) of
-  T.Success r -> if (approxEqual (\x y -> abs (x-y) < 0.1) e r) then P.succeeded else
-    failWith ("\nExpected: " ++ showBrack e ++ "\nReceived: " ++ showBrack r)
-  T.Failure d -> failWith (show d)
+prop_Parse = testParse exprParse show showBrack (approxEqual (\x y -> abs (x-y) < 0.1))
+
+prop_ParseVar :: VarExpr Double -> P.Result
+prop_ParseVar = testParse varParse show showBrackVar (varApproxEqual (\x y -> abs (x-y) < 0.1))
+
+testParse :: Parser x -> (x -> String) -> (x -> String) -> (x -> x -> Bool) -> x -> P.Result
+testParse p s d eq e = case parseString (p<*eof) mempty (s e) of
+  T.Success r -> if eq e r then P.succeeded else
+    failWith ("\nExpected: " ++ d e ++ "\nReceived: " ++ d r)
+  T.Failure x -> failWith (show x)
 
 testOp :: (forall n. Integral n => n -> n -> n) -> IntExpr Integer -> IntExpr Integer -> Bool
 testOp op (IntExpr x) (IntExpr y) = safeEval (op x y) == (op <$> safeEval x <*> safeEval y)
