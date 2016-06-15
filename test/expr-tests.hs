@@ -9,21 +9,27 @@ import           Numeric.Expr
 import           System.Exit
 import           Test.QuickCheck
 import qualified Test.QuickCheck.Property as P
-import Text.Trifecta.Parser
-import Text.Parser.Combinators
-import qualified Text.Trifecta.Result as T
-
-prop_Eq :: Expr Double -> Bool
-prop_Eq e = e == e
+import           Text.Parser.Combinators
+import           Text.Trifecta.Parser
+import qualified Text.Trifecta.Result     as T
 
 prop_ApproxEq :: Expr Double -> Bool
 prop_ApproxEq e = approxEqual (==) e e
 
-prop_Cmp :: Expr Double -> Bool
-prop_Cmp e = compare e e == EQ
+prop_ApproxEqVar :: VarExpr Double -> Bool
+prop_ApproxEqVar e = varApproxEqual (==) e e
 
-prop_Ord :: Expr Double -> Expr Double -> Bool
-prop_Ord x y = case compare x y of
+prop_Cmp :: Expr Double -> Expr Double -> Bool
+prop_Cmp = testOrd
+
+prop_CmpVar :: VarExpr Double -> VarExpr Double -> Bool
+prop_CmpVar = testOrd
+
+prop_CmpInt :: IntExpr Integer -> IntExpr Integer -> Bool
+prop_CmpInt = testOrd
+
+testOrd :: Ord a => a -> a -> Bool
+testOrd x y = x == x && y == y && case compare x y of
   LT -> lt && not eq && not gt
   EQ -> not lt && eq && not gt
   GT -> not lt && not eq && gt
@@ -32,7 +38,8 @@ prop_Ord x y = case compare x y of
     eq = x == y
     gt = x >  y
 
-prop_Add, prop_Mul, prop_Sub :: IntExpr Integer -> IntExpr Integer -> Bool
+prop_Add, prop_Mul, prop_Sub :: IntExpr Integer
+                             -> IntExpr Integer -> Bool
 prop_Add = testOp (+)
 prop_Mul = testOp (*)
 prop_Sub = testOp (-)
@@ -43,25 +50,47 @@ prop_Sig = testFn signum
 prop_Neg = testFn negate
 
 prop_Parse :: Expr Double -> P.Result
-prop_Parse = testParse exprParse show (showBrack roundShow) (approxEqual (\x y -> abs (x-y) < 0.1))
+prop_Parse =
+  testParse
+    exprParse
+    show
+    (showBrack roundShow)
+    (approxEqual (\x y -> abs (x-y) < 0.1))
 
 prop_ParseVar :: VarExpr Double -> P.Result
-prop_ParseVar = testParse varParse show (showBrackVar roundShow) (varApproxEqual (\x y -> abs (x-y) < 0.1))
+prop_ParseVar =
+  testParse
+    varParse
+    show
+    (showBrackVar roundShow)
+    (varApproxEqual (\x y -> abs (x-y) < 0.1))
 
 prop_ParseInt :: IntExpr Integer -> P.Result
-prop_ParseInt (IntExpr e) = testParse intParse show (showBrack show) (approxEqual (==)) e
+prop_ParseInt (IntExpr e) =
+  testParse
+    intParse
+    show
+    (showBrack show)
+    (approxEqual (==))
+    e
 
 roundShow :: Double -> String
 roundShow = show . (floor :: Double -> Integer)
 
-testParse :: Parser x -> (x -> String) -> (x -> String) -> (x -> x -> Bool) -> x -> P.Result
+testParse :: Parser x
+          -> (x -> String)
+          -> (x -> String)
+          -> (x -> x -> Bool)
+          -> x -> P.Result
 testParse p s d eq e = case parseString (p<*eof) mempty (s e) of
   T.Success r -> if eq e r then P.succeeded else
     failWith ("\nExpected: " ++ d e ++ "\nReceived: " ++ d r)
   T.Failure x -> failWith (show x)
 
-testOp :: (forall n. Integral n => n -> n -> n) -> IntExpr Integer -> IntExpr Integer -> Bool
-testOp op (IntExpr x) (IntExpr y) = safeEval (op x y) == (op <$> safeEval x <*> safeEval y)
+testOp :: (forall n. Integral n => n -> n -> n)
+       -> IntExpr Integer -> IntExpr Integer -> Bool
+testOp op (IntExpr x) (IntExpr y) =
+  safeEval (op x y) == (op <$> safeEval x <*> safeEval y)
 
 testFn :: (forall n. Integral n => n -> n) -> IntExpr Integer -> Bool
 testFn op (IntExpr x) = safeEval (op x) == (op <$> safeEval x)

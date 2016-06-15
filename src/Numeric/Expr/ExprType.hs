@@ -51,7 +51,7 @@ import           Numeric.Expr.ExprF
 import           Test.QuickCheck
 
 newtype Expr' lit var = Expr'
-   { getExpr' :: ExprF lit var (Expr' lit var) }
+   { _getExpr' :: ExprF lit var (Expr' lit var) }
 
 deriving instance Eq lit => Eq (Expr' lit 'NoVar)
 deriving instance (Eq lit, Eq var) => Eq (Expr' lit ('HasVar var))
@@ -62,8 +62,8 @@ instance Plated (Expr' lit var) where
   plate f (Expr' e) = Expr' <$> traverse f e
 instance ExprType (Expr' lit var) where _Expr = coerced
 type instance Base (Expr' lit var) = ExprF lit var
-instance Recursive (Expr' lit var) where project = getExpr'
-instance Corecursive (Expr' lit var) where embed = Expr'
+instance Recursive (Expr' lit var) where project = coerce
+instance Corecursive (Expr' lit var) where embed = coerce
 
 instance Num lit => Num (Expr' lit var) where
   (+) = (:+:)
@@ -131,7 +131,8 @@ class ( Plated e
 
 newtype Expr a = Expr
   { getExpr :: Expr' a 'NoVar
-  } deriving (Eq, Ord, Num, Real, Enum, Integral, Fractional, Floating)
+  } deriving ( Eq, Ord, Num, Real, Enum
+             , Integral, Fractional, Floating)
 
 instance Show a => Show (Expr a) where
   show = show . getExpr
