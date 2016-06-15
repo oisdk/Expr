@@ -43,10 +43,16 @@ prop_Sig = testFn signum
 prop_Neg = testFn negate
 
 prop_Parse :: Expr Double -> P.Result
-prop_Parse = testParse exprParse show showBrack (approxEqual (\x y -> abs (x-y) < 0.1))
+prop_Parse = testParse exprParse show (showBrack roundShow) (approxEqual (\x y -> abs (x-y) < 0.1))
 
 prop_ParseVar :: VarExpr Double -> P.Result
-prop_ParseVar = testParse varParse show showBrackVar (varApproxEqual (\x y -> abs (x-y) < 0.1))
+prop_ParseVar = testParse varParse show (showBrackVar roundShow) (varApproxEqual (\x y -> abs (x-y) < 0.1))
+
+-- prop_ParseInt :: IntExpr Integer -> P.Result
+-- prop_ParseInt (IntExpr e) = testParse intParse show (showBrack show) (approxEqual (==)) e
+
+roundShow :: Double -> String
+roundShow = show . (floor :: Double -> Integer)
 
 testParse :: Parser x -> (x -> String) -> (x -> String) -> (x -> x -> Bool) -> x -> P.Result
 testParse p s d eq e = case parseString (p<*eof) mempty (s e) of

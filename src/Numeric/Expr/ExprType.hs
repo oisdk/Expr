@@ -199,8 +199,10 @@ assoc :: ExprType e => e -> e
 assoc = rewrite $ \case
   x :*: (y :*: z) -> Just $ (x :*: y) :*: z
   x :*: (y :/: z) -> Just $ (x :*: y) :/: z
-  x :+: (y :+: z) -> Just $ (x :+: y) :+: z
   x :+: (y :-: z) -> Just $ (x :+: y) :-: z
+  x :+: (y :+: z) -> Just $ (x :+: y) :+: z
+  x :%: (y :%: z) -> Just $ (x :%: y) :%: z
+  x :÷: (y :÷: z) -> Just $ (x :÷: y) :÷: z
   _               -> Nothing
 
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
@@ -267,9 +269,9 @@ repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
         => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
 repVars f = cataM (either f (pure.embed) . getVar)
 
-showBrack :: (RealFrac a, Show a) => Expr a -> String
-showBrack e = cata brcAlg e ""
+showBrack :: (a -> String) -> Expr a -> String
+showBrack s e = cata (brcAlg s) e ""
 
-showBrackVar :: (RealFrac a, Show a) => VarExpr a -> String
-showBrackVar e = cata alg e "" where
-  alg = either (shows.show) brcAlg . getVar
+showBrackVar :: (a -> String) -> VarExpr a -> String
+showBrackVar s e = cata alg e "" where
+  alg = either (shows.show) (brcAlg s) . getVar
