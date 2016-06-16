@@ -96,9 +96,9 @@ zipExpr l f r c d = (~=) where
   (w :- x) ~= (y :- z) = r w y `c` r x z
   (w :^ x) ~= (y :^ z) = r w y `c` r x z
   (w :* x) ~= (y :* z) = r w y `c` r x z
-  AbsF x ~= AbsF y = r x y
-  SigF x ~= SigF y = r x y
-  NegF x ~= NegF y = r x y
+  AbsF x   ~= AbsF y   = r x y
+  SigF x   ~= SigF y   = r x y
+  NegF x   ~= NegF y   = r x y
   (w :÷ x) ~= (y :÷ z) = r w y `c` r x z
   (w :% x) ~= (y :% z) = r w y `c` r x z
   (w :/ x) ~= (y :/ z) = r w y `c` r x z

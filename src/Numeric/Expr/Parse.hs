@@ -61,11 +61,7 @@ exprTable
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Floating n)
   => [[Operator m e]]
 exprTable =
-  [ numFuncs ++ fltFuncs
-  , signs
-  , exps
-  , mult ++ fracs
-  , adds ]
+  [numFuncs ++ fltFuncs, signs, exps, mult ++ fracs, adds]
 
 exprParse
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ Double)
@@ -79,10 +75,7 @@ intTable
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Integral n)
   => [[Operator m e]]
 intTable =
-  [ numFuncs
-  , signs
-  , mult ++ ints
-  , adds ]
+  [numFuncs, signs, mult ++ ints, adds]
 
 intParse
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Integral n)
@@ -149,7 +142,6 @@ funcStyle =
     (fromList funcNames)
     Identifier
     ReservedIdentifier
-
 
 funcNames :: [String]
 funcNames = ["abs","signum","negate"] ++ map show allFuncs

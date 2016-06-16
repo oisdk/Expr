@@ -287,8 +287,7 @@ getVars = toListOf (cosmos._Expr._VarF)
 
 repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
         => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
-repVars f = cataM alg where
-  alg = either f (pure.embed) . getVar
+repVars f = cataM (either f (pure.embed) . getVar)
 
 showBrack :: (a -> String) -> Expr a -> String
 showBrack s e = cata (brcAlg s) e ""
