@@ -48,7 +48,7 @@ pprAlg e = case e of
   f :$ x -> shows f . showChar ' ' . parR x
   AbsF x -> showString "abs " . parR x
   SigF x -> showString "signum " . parR x
-  x :÷ y -> bin " // " x y
+  x :÷ y -> bin " ÷ " x y
   x :% y -> bin " % " x y
   where
     bin s x y = parL x . showString s . parR y

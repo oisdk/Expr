@@ -69,7 +69,7 @@ prop_ParseVar =
 prop_ParseInt :: IntExpr Integer -> P.Result
 prop_ParseInt (IntExpr e) =
   testParse
-    intParse
+    exprParse
     show
     (showBrack show)
     (approxEqual (==))

@@ -73,8 +73,10 @@ instance (Ord a, Ord r) => Ord (ExprF a 'NoVar r) where
     mappend
       (compare (prec x) (prec y))
       (zipExpr compare compare compare mappend undefined x y)
-deriving instance (Ord a, Ord r, Ord v) => Ord (ExprF a ('HasVar v) r)
-deriving instance (Show a, Show v, Show r) => Show (ExprF a ('HasVar v) r)
+deriving instance (Ord a, Ord r, Ord v)
+  => Ord (ExprF a ('HasVar v) r)
+deriving instance (Show a, Show v, Show r)
+  => Show (ExprF a ('HasVar v) r)
 
 prec :: ExprF l v r -> Int
 prec = \case

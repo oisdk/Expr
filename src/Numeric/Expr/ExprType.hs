@@ -205,6 +205,14 @@ assoc = rewrite $ \case
   x :+: (y :+: z) -> Just $ (x :+: y) :+: z
   _               -> Nothing
 
+-- | Checks for equality after converting associative operators
+-- etc into a standard form.
+-- >>> let eq = approxEqual (==) :: Expr Int -> Expr Int -> Bool
+-- >>> eq ((1 + 2) + 3) (1 + (2 + 3))
+-- True
+-- >>> let deq = approxEqual (\x y -> abs (x-y) < 0.1) :: Expr Double -> Expr Double -> Bool
+-- >>> deq ((1 + 2) + 3) (1 + (2 + 2.99))
+-- True
 approxEqual :: ExprType e => (LitType e -> LitType e -> Bool) -> e -> e -> Bool
 approxEqual eq = zipo (~=) `on` assoc where
   (~=) = zipExpr eq (==) ($) (&&) False
