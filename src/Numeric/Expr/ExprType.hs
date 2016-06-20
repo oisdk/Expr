@@ -239,16 +239,16 @@ simplify = rewrite $ \case
   1 :*: x -> Just x
   x :*: 1 -> Just x
   x :^: 1 -> Just x
-  1 :^: _ -> Just (Lit 1)
-  _ :^: 0 -> Just (Lit 1)
-  0 :*: _ -> Just (Lit 0)
-  _ :*: 0 -> Just (Lit 0)
-  _ :%: 1 -> Just (Lit 0)
-  Neg 0   -> Just (Lit 0)
-  x :-: y | x == y -> Just (Lit 0)
-  x :/: y | x == y -> Just (Lit 1)
-  x :%: y | x == y -> Just (Lit 0)
-  x :÷: y | x == y -> Just (Lit 1)
+  1 :^: _ -> Just 1
+  _ :^: 0 -> Just 1
+  0 :*: _ -> Just 0
+  _ :*: 0 -> Just 0
+  _ :%: 1 -> Just 0
+  Neg 0   -> Just 0
+  x :-: y | x == y -> Just 0
+  x :/: y | x == y -> Just 1
+  x :%: y | x == y -> Just 0
+  x :÷: y | x == y -> Just 1
   _ -> Nothing
 
 eval :: (ExprType e, VarType e ~ 'NoVar) => e -> LitType e
