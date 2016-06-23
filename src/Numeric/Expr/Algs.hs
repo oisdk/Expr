@@ -39,7 +39,7 @@ pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a -> shows a
   VarF a -> shows a
-  NegF x -> showString "-" . par R x
+  NegF x -> showChar '-' . par R x
   x :+ y -> bin " + " x y
   x :- y -> bin " - " x y
   x :/ y -> bin " / " x y
