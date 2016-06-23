@@ -35,33 +35,32 @@ safeEvalAlg = \case
   _ :% 0 -> Nothing
   x -> Just $ evalAlg x
 
-pprAlg :: (Show a) => ExprF a v (Associativity, ShowS) -> ShowS
+pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a -> shows a
   VarF a -> shows a
-  NegF (c,x) -> showString "-" . showParen (11 > precedence c) x
+  NegF (c,x) -> showString "-" . showParen (11 > rank c) x
   x :+ y -> bin " + " x y
   x :- y -> bin " - " x y
   x :/ y -> bin " / " x y
   x :* y -> bin " * " x y
   x :^ y -> bin " ^ " x y
-  f :$ x -> shows f . showChar ' ' . parR x
-  AbsF x -> showString "abs " . parR x
-  SigF x -> showString "signum " . parR x
+  f :$ x -> shows f . showChar ' ' . par R x
+  AbsF x -> showString "abs " . par R x
+  SigF x -> showString "signum " . par R x
   x :÷ y -> bin " ÷ " x y
   x :% y -> bin " % " x y
   where
-    bin s x y = parL x . showString s . parR y
-    parL = uncurry $ showParen . isParens LeftS  (prec e)
-    parR = uncurry $ showParen . isParens RightS (prec e)
-    isParens sid (A ao po) (A ai pi_) =
-      pi_ <= po && (pi_ /= po || ai /= ao || ao /= sid)
+    bin s x y = par L x . showString s . par R y
+    par s = uncurry $ showParen . isParens s (prec e)
+    isParens sid (Prec oa op) (Prec ia ip) =
+      ip <= op && (ip /= op || ia /= oa || oa /= sid)
 
-data Associativity = A
-  { side        :: Side
-  , precedence  :: Int }
+data Precedence = Prec
+  { side :: Side
+  , rank :: Int }
 
-data Side = LeftS | RightS deriving Eq
+data Side = L | R deriving Eq
 
 brcAlg :: (a -> String) -> ExprF a 'NoVar ShowS -> ShowS
 brcAlg s = \case
@@ -79,22 +78,21 @@ brcAlg s = \case
   x :% y -> sp x . showString " % "  . sp y
   where sp = showParen True
 
-prec :: ExprF a v r -> Associativity
+prec :: ExprF a v r -> Precedence
 prec = \case
-  LitF _ -> al 11
-  VarF _ -> al 11
-  AbsF _ -> al 10
-  SigF _ -> al 10
-  _ :$ _ -> al 10
-  _ :^ _ -> A RightS 8
-  _ :÷ _ -> al 7
-  _ :% _ -> al 7
-  _ :/ _ -> al 7
-  _ :* _ -> al 7
-  _ :+ _ -> al 6
-  _ :- _ -> al 6
-  NegF _ -> al 0
-  where al = A LeftS
+  LitF _ -> Prec L 11
+  VarF _ -> Prec L 11
+  AbsF _ -> Prec L 10
+  SigF _ -> Prec L 10
+  _ :$ _ -> Prec L 10
+  _ :^ _ -> Prec R 8
+  _ :÷ _ -> Prec L 7
+  _ :% _ -> Prec L 7
+  _ :/ _ -> Prec L 7
+  _ :* _ -> Prec L 7
+  _ :+ _ -> Prec L 6
+  _ :- _ -> Prec L 6
+  NegF _ -> Prec L 0
 
 litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a v r)]
 litArb = const [LitF . abs <$> arbitrary]
