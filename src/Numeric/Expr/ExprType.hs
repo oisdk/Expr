@@ -298,8 +298,8 @@ repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
 repVars f = cataM (either f (pure.embed) . getVar)
 
 showBrack :: (a -> String) -> Expr a -> String
-showBrack s e = cata (brcAlg s) e ""
+showBrack s e = zygo prec (brcAlg s) e ""
 
 showBrackVar :: (a -> String) -> VarExpr a -> String
-showBrackVar s e = cata alg e "" where
+showBrackVar s e = zygo prec alg e "" where
   alg = either (shows.show) (brcAlg s) . getVar

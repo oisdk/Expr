@@ -35,6 +35,8 @@ safeEvalAlg = \case
   _ :% 0 -> Nothing
   x -> Just $ evalAlg x
 
+-- | An algebra for pretty-printing an expression, with
+-- minimal parentheses.
 pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a -> shows a
@@ -53,6 +55,9 @@ pprAlg e = case e of
   where
     bin s x y = par L x . showString s . par R y
     par s = uncurry $ showParen . isParens s (prec e)
+    -- | Function to decide whether or not to parenthesize
+    -- a given expression. Adapted from
+    -- <http://www.cs.tufts.edu/%7Enr/pubs/unparse-abstract.html here>
     isParens sid (Prec oa op) (Prec ia ip) =
       ip < op || ip == op && (ia /= oa || oa /= sid)
 
@@ -62,21 +67,27 @@ data Precedence = Prec
 
 data Side = L | R deriving Eq
 
-brcAlg :: (a -> String) -> ExprF a 'NoVar ShowS -> ShowS
-brcAlg s = \case
+-- | An algebra for pretty-printing, which conservatively
+-- over-prints parentheses (for debugging)
+brcAlg :: (a -> String) -> ExprF a v (Precedence, ShowS) -> ShowS
+brcAlg s e = case e of
   LitF a -> showString (s a)
-  NegF x -> showString "-" . sp x
-  x :+ y -> sp x . showString " + " . sp y
-  x :- y -> sp x . showString " - " . sp y
-  x :/ y -> sp x . showString " / " . sp y
-  x :* y -> sp x . showString " * " . sp y
-  x :^ y -> sp x . showString " ^ " . sp y
-  f :$ x -> shows f . showChar ' ' . sp x
-  AbsF x -> showString "abs " . sp x
-  SigF x -> showString "signum " . sp x
-  x :÷ y -> sp x . showString " // " . sp y
-  x :% y -> sp x . showString " % "  . sp y
-  where sp = showParen True
+  VarF a -> shows a
+  NegF x -> showChar '-' . par x
+  x :+ y -> bin " + " x y
+  x :- y -> bin " - " x y
+  x :/ y -> bin " / " x y
+  x :* y -> bin " * " x y
+  x :^ y -> bin " ^ " x y
+  f :$ x -> shows f . showChar ' ' . par x
+  AbsF x -> showString "abs " . par x
+  SigF x -> showString "signum " . par x
+  x :÷ y -> bin " ÷ " x y
+  x :% y -> bin " % " x y
+  where
+    bin o x y = par x . showString o . par y
+    par = uncurry $ showParen . isParens (prec e)
+    isParens (Prec _ op) (Prec _ ip) = ip <= op
 
 prec :: ExprF a v r -> Precedence
 prec = \case
