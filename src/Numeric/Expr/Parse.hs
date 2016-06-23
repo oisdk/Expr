@@ -79,13 +79,13 @@ fltTable
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Floating n)
   => [[Operator m e]]
 fltTable =
-  [numFuncs ++ fltFuncs, signs, exps, mult ++ fracs, adds]
+  [numFuncs ++ fltFuncs ++ signs, exps, mult ++ fracs, adds]
 
 intTable
   :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Integral n)
   => [[Operator m e]]
 intTable =
-  [numFuncs, signs, mult ++ ints, adds]
+  [numFuncs ++ signs, mult ++ ints, adds]
 -- $setup
 -- >>> import Text.Trifecta.Parser
 

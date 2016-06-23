@@ -58,6 +58,14 @@ prop_Parse =
     (showBrack roundShow)
     (approxEqual (\x y -> abs (x-y) < 0.1))
 
+prop_Parse_Min :: IntExpr Integer -> P.Result
+prop_Parse_Min (IntExpr e) =
+  testMinBracks
+    exprParse
+    show
+    (approxEqual (==))
+    e
+
 prop_ParseVar :: VarExpr Double -> P.Result
 prop_ParseVar =
   testParse
@@ -87,6 +95,36 @@ testParse p s d eq e = case parseString (p<*eof) mempty (s e) of
   T.Success r -> if eq e r then P.succeeded else
     failWith ("\nExpected: " ++ d e ++ "\nReceived: " ++ d r)
   T.Failure x -> failWith (show x)
+
+testMinBracks :: Parser x
+              -> (x -> String)
+              -> (x -> x -> Bool)
+              -> x -> P.Result
+testMinBracks p s eq e =
+  let shown = s e
+      pcount = length . filter ('('==) $ shown
+      inds = init [0..pcount]
+      prse = parseString (p <* eof) mempty
+      norm = prse shown
+      rems = [ removeParens (Left i) shown | i <- inds ]
+      in case norm of
+           T.Success r ->
+             foldr f P.succeeded rems where
+               f el a = case prse el of
+                 T.Success sc ->
+                   if eq sc r then failWith (el ++ " should not equal: " ++ shown) else a
+                 T.Failure _ -> a
+           T.Failure x -> failWith (show x)
+
+removeParens :: Either Int Int -> String -> String
+removeParens = flip (foldr f base) where
+  base _ = ""
+  f '(' a (Left 0) = a (Right 0)
+  f '(' a (Left n) = '(' : a (Left (n-1) )
+  f '(' a (Right n) = '(' : a (Right (n+1))
+  f ')' a (Right 0) = a (Right 1)
+  f ')' a (Right n) = ')' : a (Right (n-1))
+  f c a e = c : a e
 
 testOp :: (forall n. Integral n => n -> n -> n)
        -> IntExpr Integer -> IntExpr Integer -> Bool

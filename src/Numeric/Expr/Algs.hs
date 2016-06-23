@@ -39,7 +39,7 @@ pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
 pprAlg e = case e of
   LitF a -> shows a
   VarF a -> shows a
-  NegF (c,x) -> showString "-" . showParen (11 > rank c) x
+  NegF x -> showString "-" . par R x
   x :+ y -> bin " + " x y
   x :- y -> bin " - " x y
   x :/ y -> bin " / " x y
@@ -54,7 +54,7 @@ pprAlg e = case e of
     bin s x y = par L x . showString s . par R y
     par s = uncurry $ showParen . isParens s (prec e)
     isParens sid (Prec oa op) (Prec ia ip) =
-      ip <= op && (ip /= op || ia /= oa || oa /= sid)
+      ip < op || ip == op && (ia /= oa || oa /= sid)
 
 data Precedence = Prec
   { side :: Side
@@ -84,6 +84,7 @@ prec = \case
   VarF _ -> Prec L 11
   AbsF _ -> Prec L 10
   SigF _ -> Prec L 10
+  NegF _ -> Prec L 10
   _ :$ _ -> Prec L 10
   _ :^ _ -> Prec R 8
   _ :÷ _ -> Prec L 7
@@ -92,7 +93,6 @@ prec = \case
   _ :* _ -> Prec L 7
   _ :+ _ -> Prec L 6
   _ :- _ -> Prec L 6
-  NegF _ -> Prec L 0
 
 litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a v r)]
 litArb = const [LitF . abs <$> arbitrary]
