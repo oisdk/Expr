@@ -4,6 +4,7 @@
 
 module Numeric.Expr.Algs where
 
+import           Data.Function
 import           Numeric.Expr.ExprF
 import           Test.QuickCheck
 
@@ -35,11 +36,12 @@ safeEvalAlg = \case
   _ :% 0 -> Nothing
   x -> Just $ evalAlg x
 
--- | An algebra for pretty-printing an expression, with
--- minimal parentheses.
-pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
-pprAlg e = case e of
-  LitF a -> shows a
+printAlg :: (a -> ShowS)
+         -> (Side -> Precedence -> Precedence -> Bool)
+         -> ExprF a v (Precedence, ShowS)
+         -> ShowS
+printAlg shows' isParens e = case e of
+  LitF a -> shows' a
   VarF a -> shows a
   NegF x -> showChar '-' . par R x
   x :+ y -> bin " + " x y
@@ -54,12 +56,17 @@ pprAlg e = case e of
   x :% y -> bin " % " x y
   where
     bin s x y = par L x . showString s . par R y
-    par s = uncurry $ showParen . isParens s (prec e)
-    -- | Function to decide whether or not to parenthesize
-    -- a given expression. Adapted from
-    -- <http://www.cs.tufts.edu/%7Enr/pubs/unparse-abstract.html here>
-    isParens sid (Prec oa op) (Prec ia ip) =
-      ip < op || ip == op && (ia /= oa || oa /= sid)
+    par s = uncurry (showParen . isParens s (prec e))
+
+-- | An algebra for pretty-printing an expression, with
+-- minimal parentheses.
+pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
+pprAlg = printAlg shows isParens where
+  -- | Function to decide whether or not to parenthesize
+  -- a given expression. Adapted from
+  -- <http://www.cs.tufts.edu/%7Enr/pubs/unparse-abstract.html here>
+  isParens sid (Prec oa op) (Prec ia ip) =
+    ip < op || ip == op && (ia /= oa || oa /= sid)
 
 data Precedence = Prec
   { side :: Side
@@ -70,24 +77,8 @@ data Side = L | R deriving Eq
 -- | An algebra for pretty-printing, which conservatively
 -- over-prints parentheses (for debugging)
 brcAlg :: (a -> String) -> ExprF a v (Precedence, ShowS) -> ShowS
-brcAlg s e = case e of
-  LitF a -> showString (s a)
-  VarF a -> shows a
-  NegF x -> showChar '-' . par x
-  x :+ y -> bin " + " x y
-  x :- y -> bin " - " x y
-  x :/ y -> bin " / " x y
-  x :* y -> bin " * " x y
-  x :^ y -> bin " ^ " x y
-  f :$ x -> shows f . showChar ' ' . par x
-  AbsF x -> showString "abs " . par x
-  SigF x -> showString "signum " . par x
-  x :÷ y -> bin " ÷ " x y
-  x :% y -> bin " % " x y
-  where
-    bin o x y = par x . showString o . par y
-    par = uncurry $ showParen . isParens (prec e)
-    isParens (Prec _ op) (Prec _ ip) = ip <= op
+brcAlg s = printAlg (showString . s) isParens where
+  isParens _ = (<=) `on` rank
 
 prec :: ExprF a v r -> Precedence
 prec = \case
@@ -117,10 +108,10 @@ intArb :: Integral a => r -> [Gen (ExprF a v r)]
 intArb r = map pure [r :÷ r, r :% r]
 
 fracArb :: Fractional a => r -> [Gen (ExprF a v r)]
-fracArb r = [ pure (r :/ r) ]
+fracArb r = [pure (r :/ r)]
 
 floatArb :: Floating a => r -> [Gen (ExprF a v r)]
-floatArb r = [ pure $ r :^ r, flip (:$) r <$> arbitrary ]
+floatArb r = [pure $ r :^ r, flip (:$) r <$> arbitrary]
 
 varArb :: (Show v, Arbitrary v) => r -> [Gen (ExprF a ('HasVar v) r)]
 varArb = const [VarF <$> arbitrary]

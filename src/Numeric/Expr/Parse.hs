@@ -70,19 +70,22 @@ ints =
   , binary "//" (:÷:) AssocLeft]
 
 fltFuncs, exps
-  :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Floating n)
+  :: (Monad m, TokenParsing m, ExprType e
+     ,LitType e ~ n, Floating n)
   => [Operator m e]
 fltFuncs = [prefixFun (show f) (f:$:) | f <- allFuncs]
 exps = [binary "^" (:^:) AssocRight]
 
 fltTable
-  :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Floating n)
+  :: (Monad m, TokenParsing m, ExprType e
+     ,LitType e ~ n, Floating n)
   => [[Operator m e]]
 fltTable =
   [numFuncs ++ fltFuncs ++ signs, exps, mult ++ fracs, adds]
 
 intTable
-  :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, Integral n)
+  :: (Monad m, TokenParsing m, ExprType e
+     ,LitType e ~ n, Integral n)
   => [[Operator m e]]
 intTable =
   [numFuncs ++ signs, mult ++ ints, adds]
@@ -90,11 +93,11 @@ intTable =
 -- >>> import Text.Trifecta.Parser
 
 -- | Parses an expression
--- >>> let doubleExpr = parseTest (exprParse :: Parser (Expr Double))
+-- >>> let fltExpr = parseTest (exprParse :: Parser (Expr Double))
 -- >>> let intExpr = parseTest (exprParse :: Parser (Expr Integer))
--- >>> doubleExpr "1"
+-- >>> fltExpr "1"
 -- 1.0
--- >>> doubleExpr "1 + 2 - 3"
+-- >>> fltExpr "1 + 2 - 3"
 -- 1.0 + 2.0 - 3.0
 -- >>> intExpr "1"
 -- 1
@@ -113,7 +116,8 @@ intTable =
 -- >>> intExpr "1 * (2 * 3)"
 -- 1 * 2 * 3
 exprParse
-  :: (Monad m, TokenParsing m, ExprType e, LitType e ~ n, ParseLit n)
+  :: (Monad m, TokenParsing m, ExprType e
+     ,LitType e ~ n, ParseLit n)
   => m e
 exprParse =
   buildExpressionParser opstable term <?> "expression" where
@@ -128,7 +132,8 @@ varParse
      ,LitType e ~ n, ParseLit n, VarType e ~ 'HasVar v
      ,IsString v, Show v)
   => m e
-varParse = buildExpressionParser opstable term <?> "expression" where
+varParse = buildExpressionParser opstable term
+        <?> "expression" where
   term = parens varParse <|> number <?> "expression"
   number = fmap Lit unsigned <|> Var <$> ident varStyle
 
