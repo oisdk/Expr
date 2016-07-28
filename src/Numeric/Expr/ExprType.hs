@@ -11,6 +11,7 @@
 module Numeric.Expr.ExprType
   ( Expr
   , VarExpr
+  , HoleExpr
   , IntExpr(..)
   , ExprType(..)
   , LitType
@@ -116,8 +117,8 @@ type family VarType e :: VarAbility *
 type instance LitType (Expr a) = a
 type instance VarType (Expr a) = 'NoVar
 
-type instance LitType (VarExpr a) = a
-type instance VarType (VarExpr a) = 'HasVar VarString
+type instance LitType (HoleExpr v a) = a
+type instance VarType (HoleExpr v a) = 'HasVar v
 
 type instance LitType (Expr' a v) = a
 type instance VarType (Expr' a v) = v
@@ -145,17 +146,19 @@ type instance Base (Expr a) = ExprF a 'NoVar
 instance Recursive (Expr a) where project = coerce
 instance Corecursive (Expr a) where embed = coerce
 
-newtype VarExpr a = VarExpr
-  { getVarExpr :: Expr' a ('HasVar VarString)
+newtype HoleExpr v a = HoleExpr
+  { getVarExpr :: Expr' a ('HasVar v)
   } deriving (Eq, Ord, Num, Fractional, Floating)
 
 newtype VarString = VarString
   { getVarString :: String
   } deriving (Eq, Ord)
 
+type VarExpr a = HoleExpr VarString a
+
 instance Show VarString where show = getVarString
 instance IsString VarString where fromString = VarString
-instance IsString (VarExpr a) where fromString = Var . fromString
+instance (Show v, IsString v) => IsString (HoleExpr v a) where fromString = Var . fromString
 instance Arbitrary VarString where
   arbitrary = VarString <$> ((:) <$> elements starts <*> listOf (elements ends)) where
     starts = ['a'..'z'] ++ ['A'..'Z']
@@ -164,11 +167,11 @@ instance Arbitrary VarString where
 instance Show a => Show (VarExpr a) where
   show = show . getVarExpr
 
-instance ExprType (VarExpr a) where _Expr = coerced
-instance Plated (VarExpr a) where plate = _Expr.traversed
-type instance Base (VarExpr a) = ExprF a ('HasVar VarString)
-instance Recursive (VarExpr a) where project = coerce
-instance Corecursive (VarExpr a) where embed = coerce
+instance ExprType (HoleExpr v a) where _Expr = coerced
+instance Plated (HoleExpr v a) where plate = _Expr.traversed
+type instance Base (HoleExpr v a) = ExprF a ('HasVar v)
+instance Recursive (HoleExpr v a) where project = coerce
+instance Corecursive (HoleExpr v a) where embed = coerce
 
 pattern x :*: y <- (view _Expr -> x :* y) where
   x :*: y = review _Expr (x :* y)
@@ -268,7 +271,7 @@ instance (Floating a, Arbitrary a) => Arbitrary (Expr a) where
     alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r where
       r = n `div` 2
 
-instance (Floating a, Arbitrary a) => Arbitrary (VarExpr a) where
+instance (Floating a, Arbitrary a, Arbitrary v, Show v) => Arbitrary (HoleExpr v a) where
   arbitrary = sized (anaM alg) where
     alg 0 = oneof $ litArb 0 ++ varArb 0
     alg n = oneof $ litArb r ++ floatArb r ++ fracArb r ++ numArb r ++ varArb r where

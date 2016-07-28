@@ -31,7 +31,7 @@ instance MathML Integer where mlRep = cstRep . show
 instance MathML Float   where mlRep = cstRep . show
 
 instance MathML a => MathML (Expr a) where mlRep = cata mlalg
-instance MathML a => MathML (VarExpr a) where
+instance (Show v, MathML v, MathML a) => MathML (HoleExpr v a) where
   mlRep = cata (either (cstRep.show) mlalg . getVar)
 
 instance MathML Func where
