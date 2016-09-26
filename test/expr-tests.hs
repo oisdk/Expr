@@ -55,7 +55,7 @@ prop_Parse =
   testParse
     exprParse
     show
-    (showBrack roundShow)
+    show
     (approxEqual (\x y -> abs (x-y) < 0.1))
 
 prop_Parse_Min :: IntExpr Integer -> P.Result
@@ -71,7 +71,7 @@ prop_ParseVar =
   testParse
     varParse
     show
-    (showBrackVar roundShow)
+    show
     (varApproxEqual (\x y -> abs (x-y) < 0.1))
 
 prop_ParseInt :: IntExpr Integer -> P.Result
@@ -79,7 +79,7 @@ prop_ParseInt (IntExpr e) =
   testParse
     exprParse
     show
-    (showBrack show)
+    show
     (approxEqual (==))
     e
 
@@ -143,8 +143,10 @@ failWith :: String -> P.Result
 failWith r = P.failed { P.reason = r }
 
 return []
+runTests :: IO Bool
 runTests = $forAllProperties quickCheckExit
 
+main :: IO Bool
 main = do
   doctest
     [ "-isrc"

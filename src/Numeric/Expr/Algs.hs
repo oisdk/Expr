@@ -4,7 +4,6 @@
 
 module Numeric.Expr.Algs where
 
-import           Data.Function
 import           Numeric.Expr.ExprF
 import           Test.QuickCheck
 
@@ -36,65 +35,6 @@ safeEvalAlg = \case
   _ :% 0 -> Nothing
   x -> Just $ evalAlg x
 
-printAlg :: (a -> ShowS)
-         -> (Side -> Precedence -> Precedence -> Bool)
-         -> ExprF a v (Precedence, ShowS)
-         -> ShowS
-printAlg shows' isParens e = case e of
-  LitF a -> shows' a
-  VarF a -> shows a
-  NegF x -> showChar '-' . par R x
-  x :+ y -> bin " + " x y
-  x :- y -> bin " - " x y
-  x :/ y -> bin " / " x y
-  x :* y -> bin " * " x y
-  x :^ y -> bin " ^ " x y
-  f :$ x -> shows f . showChar ' ' . par R x
-  AbsF x -> showString "abs " . par R x
-  SigF x -> showString "signum " . par R x
-  x :÷ y -> bin " ÷ " x y
-  x :% y -> bin " % " x y
-  where
-    bin s x y = par L x . showString s . par R y
-    par s = uncurry (showParen . isParens s (prec e))
-
--- | An algebra for pretty-printing an expression, with
--- minimal parentheses.
-pprAlg :: Show a => ExprF a v (Precedence, ShowS) -> ShowS
-pprAlg = printAlg shows isParens where
-  -- | Function to decide whether or not to parenthesize
-  -- a given expression. Adapted from
-  -- <http://www.cs.tufts.edu/%7Enr/pubs/unparse-abstract.html here>
-  isParens sid (Prec oa op) (Prec ia ip) =
-    ip < op || ip == op && (ia /= oa || oa /= sid)
-
-data Precedence = Prec
-  { side :: Side
-  , rank :: Int }
-
-data Side = L | R deriving Eq
-
--- | An algebra for pretty-printing, which conservatively
--- over-prints parentheses (for debugging)
-brcAlg :: (a -> String) -> ExprF a v (Precedence, ShowS) -> ShowS
-brcAlg s = printAlg (showString . s) isParens where
-  isParens _ = (<=) `on` rank
-
-prec :: ExprF a v r -> Precedence
-prec = \case
-  LitF _ -> Prec L 11
-  VarF _ -> Prec L 11
-  AbsF _ -> Prec L 10
-  SigF _ -> Prec L 10
-  NegF _ -> Prec L 10
-  _ :$ _ -> Prec L 10
-  _ :^ _ -> Prec R 8
-  _ :÷ _ -> Prec L 7
-  _ :% _ -> Prec L 7
-  _ :/ _ -> Prec L 7
-  _ :* _ -> Prec L 7
-  _ :+ _ -> Prec L 6
-  _ :- _ -> Prec L 6
 
 litArb :: (Num a, Arbitrary a) => r -> [Gen (ExprF a v r)]
 litArb = const [LitF . abs <$> arbitrary]

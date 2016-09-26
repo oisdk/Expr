@@ -6,9 +6,12 @@ packages:
 - location:
     git: https://github.com/oisdk/recursion-schemes-extras.git
     commit: 77e71899ad45ff1384b2d2ca986b635a992376ba
+- location:
+    git: https://github.com/oisdk/ExprPrint.git
+    commit: bf624e42673d8f55302410bcbc06359f42a0d24f
 extra-deps:
 - taggy-0.2.0
 - taggy-lens-0.1.2
-resolver: lts-5.16
+resolver: lts-6.2
 flags: {}
 extra-package-dbs: []

@@ -36,8 +36,6 @@ module Numeric.Expr.ExprType
   , safeEval
   , getVars
   , repVars
-  , showBrack
-  , showBrackVar
   , varApproxEqual
   ) where
 
@@ -46,6 +44,9 @@ import           Data.Coerce
 import           Data.Function
 import           Data.Functor.Foldable
 import           Data.Functor.Foldable.Extras
+import           Data.Monoid
+import           Data.Text.ExprPrint          hiding (Lit)
+import qualified Data.Text.ExprPrint          as Print
 import           GHC.Exts
 import           Numeric.Expr.Algs
 import           Numeric.Expr.ExprF
@@ -109,7 +110,25 @@ instance Floating a => Floating (Expr' a v) where
   (**)  = (:^:)
 
 instance (Show a) => Show (Expr' a v) where
-  showsPrec _ = zygo prec pprAlg . assoc
+  showsPrec _ = appEndo . showExpr (Endo . showParen True . appEndo) (proj . project) . assoc where
+    proj = \case
+      LitF x -> Print.Lit (ff x)
+      VarF x -> Print.Lit (ff x)
+      AbsF x -> Prefix (Operator L 10 (fs "abs ")) x
+      SigF x -> Prefix (Operator L 10 (fs "signum ")) x
+      NegF x -> Prefix (Operator L 10 (fs "negate ")) x
+      f :$ x -> Prefix (Operator L 10 (ff f <> fs " ")) x
+      x :^ y -> Binary (Operator R 8 (fs " ^ ")) x y
+      x :÷ y -> Binary (Operator L 7 (fs " ÷ ")) x y
+      x :% y -> Binary (Operator L 7 (fs " % ")) x y
+      x :/ y -> Binary (Operator L 7 (fs " / ")) x y
+      x :* y -> Binary (Operator L 7 (fs " * ")) x y
+      x :+ y -> Binary (Operator L 6 (fs " + ")) x y
+      x :- y -> Binary (Operator L 6 (fs " - ")) x y
+    fs = Endo . showString
+    ff :: Show a => a -> Endo String
+    ff = Endo . shows
+
 
 type family LitType e
 type family VarType e :: VarAbility *
@@ -299,10 +318,3 @@ getVars = toListOf (cosmos._Expr._VarF)
 repVars :: (Monad f, ExprType e, VarType e ~ 'HasVar a)
         => (a -> f (Expr (LitType e))) -> e -> f (Expr (LitType e))
 repVars f = cataM (either f (pure.embed) . getVar)
-
-showBrack :: (a -> String) -> Expr a -> String
-showBrack s e = zygo prec (brcAlg s) e ""
-
-showBrackVar :: (a -> String) -> VarExpr a -> String
-showBrackVar s e = zygo prec alg e "" where
-  alg = either (shows.show) (brcAlg s) . getVar
